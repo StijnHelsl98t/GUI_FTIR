@@ -7,4 +7,4 @@ Fully open source Gui made for FTIR simulation/data analysis (using python RADIS
 
 Because of our focus, a GUI has been created that can both simulate FTIR spectra as well as fit calculated spectra to the gained experimental spectra. Within this GUI, in total 24 molecules have been chosen to be listed, which include all of the Hitran molecule-options which contain a combination of H, N, O and C. 
 
-If someone wants to use this GUI, one only needs to download and run the installer. However, if someone is interested in different molecules than us, one can instead install the python-code and change the list which includes all of the chosen molecules.
+If someone wants to run the GUI as is, all one needs to do is install the python-code and run it as it is. If however, someone is interested in different molecules than us, one can instead change the list which includes all of the chosen molecules.
