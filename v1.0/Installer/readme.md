@@ -1,1 +1,0 @@
-Within this folder, one can find the installer to directly install the gui. This does not give access to the python code, but if one isn't interested in this and just wants to use it for the same principles that we do.
