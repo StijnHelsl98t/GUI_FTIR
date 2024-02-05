@@ -279,11 +279,14 @@ class create_tab_ftir_simulator(QWidget):
     def button_pressed(self,s):
         if self.sender().text() == "Save directory":
             self.directory_for_saving = self.layout.line_edit_directory.text().replace("\\", "\\\\") + "\\\\"
-
+            print(self.directory_for_saving)
             if self.directory_for_saving == "":
                 self.layout.label_directory2.setText("No directory given.")
-            elif "C:\\" not in self.directory_for_saving:
+            elif ("C:\\" not in self.directory_for_saving and "P:\\" not in self.directory_for_saving and
+                  "D:\\" not in self.directory_for_saving and "F:\\" not in self.directory_for_saving and
+                  "K:\\" not in self.directory_for_saving and "L:\\" not in self.directory_for_saving):
                 self.layout.label_directory2.setText("Incorrect directory given.")
+
             else:
                 if not os.path.exists(self.directory_for_saving):
                     os.makedirs(self.directory_for_saving)
@@ -496,16 +499,16 @@ class create_tab_ftir_fitting(QWidget):
         # Create fitting parameters row
         self.layout.label_slitsize = QLabel("Fitting parameters: \t\t\t\t\t Slit size: ")
         self.layout.label_slitsize.setStyleSheet("font: bold ; font-size:10pt")
-        self.layout.line_edit_slitsize = QLineEdit("0.30926986906880655")
+        self.layout.line_edit_slitsize = QLineEdit("0.2811189105899404")
         self.layout.line_edit_slitsize.textChanged.connect(lambda: self.text_changed("Slit size"))
         self.layout.line_edit_slitsize.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.layout.label_offset_left = QLabel("Offset 1000 cm-1 (if known): ")
         self.layout.label_offset_left.setStyleSheet("font: bold ; font-size:10pt")
-        self.layout.line_edit_offset_left = QLineEdit("-0.029658974698683054")
+        self.layout.line_edit_offset_left = QLineEdit("0")
         self.layout.line_edit_offset_left.textChanged.connect(lambda: self.text_changed("Offset left"))
         self.layout.label_offset_right = QLabel("Offset 4000 cm-1 (if known): ")
         self.layout.label_offset_right.setStyleSheet("font: bold ; font-size:10pt")
-        self.layout.line_edit_offset_right = QLineEdit("-0.1354505376341063")
+        self.layout.line_edit_offset_right = QLineEdit("-0.07691036347075944")
         self.layout.line_edit_offset_right.textChanged.connect(lambda: self.text_changed("Offset right"))
         self.layout.button_fit_parameters = QPushButton("Save fitting parameters")
         self.layout.button_fit_parameters.clicked.connect(self.button_pressed)
@@ -599,12 +602,14 @@ class create_tab_ftir_fitting(QWidget):
 
             if self.directory_save_invenioR_processed == "":
                 self.layout.label_directory2.setText("No directory given.")
-            elif "C:\\" not in self.directory_save_invenioR_processed:
+            elif ("C:\\" not in self.directory_data_InvenioR and "P:\\" not in self.directory_data_InvenioR and
+                  "D:\\" not in self.directory_data_InvenioR and "F:\\" not in self.directory_data_InvenioR and
+                  "K:\\" not in self.directory_data_InvenioR and "L:\\" not in self.directory_data_InvenioR):
                 self.layout.label_directory2.setText("Incorrect directory given.")
             else:
                 if not os.path.exists(self.directory_save_invenioR_processed):
                     os.makedirs(self.directory_save_invenioR_processed)
-                    self.layout.label_directory2.setText("Directory exists.")
+                    self.layout.label_directory2.setText("Dirctory exists.")
 
                 if os.path.exists(self.directory_save_invenioR_processed):
                     self.layout.label_directory2.setText("Directory exists.")

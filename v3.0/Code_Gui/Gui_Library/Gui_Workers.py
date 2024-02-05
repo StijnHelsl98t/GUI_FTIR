@@ -209,6 +209,7 @@ class WorkerFTIRFitter(QObject):
         self.fitting_functions.append(GMSL.spectra_fit_8_molecules)
         self.parent = parent
         self.dict_molecules = {}
+        self.dict_molecules_errors = {}
 
 
     def ftir_fit_one(self, s):
@@ -223,6 +224,7 @@ class WorkerFTIRFitter(QObject):
         data = self.inner_tab.array_data[index]
         list_molecules = self.tab.molecule_storage_for_fitting
         dict_molecules = {}
+        dict_molecules_errors = {}
 
         if os.path.exists(data_text_file_selected) and not s[0] and os.stat(data_text_file_selected).st_size > 0:
             w_exp = []
@@ -244,7 +246,6 @@ class WorkerFTIRFitter(QObject):
             bool_molecules = False
             bool_pressure = False
             bool_temperature = False
-            bool_pathlength = False
 
             if len(list_molecules) != 0:
                 bool_molecules = True
@@ -328,15 +329,25 @@ class WorkerFTIRFitter(QObject):
                     for mol_i in range(len(list_molecules)):
                         if list_molecules[mol_i] not in list(dict_molecules.keys()):
                             dict_molecules[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
+                            dict_molecules_errors[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
                         elif not len(dict_molecules[list_molecules[mol_i]]) == len_files_in_dir:
                             dict_molecules[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
+                            dict_molecules_errors[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
                         if list_molecules[mol_i] + "_concentration" not in keys:
                             hf.create_dataset(list_molecules[mol_i] + "_concentration",
+                                              data=np.zeros(len(files_in_directory)))
+                        elif list_molecules[mol_i] + "_concentration_errors" not in keys:
+                            hf.create_dataset(list_molecules[mol_i] + "_concentration_errors",
                                               data=np.zeros(len(files_in_directory)))
                         elif not len(hf[list_molecules[mol_i] + "_concentration"]) == len_files_in_dir:
                             del hf[list_molecules[mol_i] + "_concentration"]
                             hf.create_dataset(list_molecules[mol_i] + "_concentration",
                                               data=np.zeros(len(files_in_directory)))
+                        elif not len(hf[list_molecules[mol_i] + "_concentration_errors"]) == len_files_in_dir:
+                            del hf[list_molecules[mol_i] + "_concentration_errors"]
+                            hf.create_dataset(list_molecules[mol_i] + "_concentration_errors",
+                                              data=np.zeros(len(files_in_directory)))
+
 
                 try:
                     data_wavelength = np.array(data.get_range("AB")[0:-1])
@@ -430,16 +441,22 @@ class WorkerFTIRFitter(QObject):
 
                     result = model.fit(t_exp_baseline_corrected, params, w=w_exp)
 
-                    c_list_old = {}
+                    list_c_old = {}
                     c_list_minus = {}
+                    list_c_errors_old = {}
                     for i in range(len(list_molecules)):
                         if result.best_values['c' + str(i + 1)] * dict_molecules[list_molecules[i]] < 0:
-                            c_list_old[list_molecules[i]] = 0
+                            list_c_old[list_molecules[i]] = 0
+                            list_c_errors_old[list_molecules[i]] = 0
                             c_list_minus[list_molecules[i]] = result.best_values['c' + str(i + 1)] * dict_molecules[
                                 list_molecules[i]]
                         else:
-                            c_list_old[list_molecules[i]] = result.best_values['c' + str(i + 1)] * dict_molecules[
+                            list_c_old[list_molecules[i]] = result.best_values['c' + str(i + 1)] * dict_molecules[
                                 list_molecules[i]]
+
+                            list_c_errors_old[list_molecules[i]] = (
+                                    result.params['c' + str(i + 1)].stderr/result.best_values['c' + str(i + 1)])
+
 
                     # Re-fit if needed
                     refit_bool = True
@@ -453,7 +470,7 @@ class WorkerFTIRFitter(QObject):
                                 molecule = list(dict_molecules.keys())[mol_i]
                                 spectrum_dictionary_refit[molecule] = (
                                     GFL.spectrum_in_air_creator(mol=molecule,
-                                                                mf=c_list_old[molecule],
+                                                                mf=list_c_old[molecule],
                                                                 pres=pressure, temp=temperature,
                                                                 path_l=pathlength,
                                                                 wl_min=self.wlmin,
@@ -464,9 +481,8 @@ class WorkerFTIRFitter(QObject):
                                 dict_t_refit[molecule] = \
                                     spectrum_dictionary_refit[molecule].get("transmittance_noslit")[1]
 
-                            GMSL.storage_for_dict(dict_w_refit, dict_t_refit, pathlength, 0.30926986906880655,
-                                                  -0.029658974698683054,
-                                                  -0.1354505376341063)
+                            GMSL.storage_for_dict(dict_w_refit, dict_t_refit, pathlength,self.tab.slit_size, self.tab.offset_left,
+                                          self.tab.offset_right)
 
                             model_refit = Model(self.fitting_functions[len(list_molecules) - 1])
                             if len(list_molecules) == 1:
@@ -492,27 +508,34 @@ class WorkerFTIRFitter(QObject):
 
                             result_refit = model_refit.fit(t_exp, params_refit, w=w_exp)
 
-                            c_list_new = {}
+                            list_c_new = {}
+                            list_c_errors_new={}
                             for i in range(len(list_molecules)):
-                                if result_refit.best_values['c' + str(i + 1)] * c_list_old[list_molecules[i]] < 0:
-                                    c_list_new[list_molecules[i]] = 0
+                                if result_refit.best_values['c' + str(i + 1)] * list_c_old[list_molecules[i]] < 0:
+                                    list_c_new[list_molecules[i]] = 0
+                                    list_c_errors_new[list_molecules[i]] = 0
                                 else:
-                                    c_list_new[list_molecules[i]] = result_refit.best_values['c' + str(i + 1)] * \
-                                                                           c_list_old[list_molecules[i]]
+                                    list_c_new[list_molecules[i]] = result_refit.best_values['c' + str(i + 1)] * \
+                                                                           list_c_old[list_molecules[i]]
+
+                                    if result_refit.params['c' + str(i + 1)].stderr is not None:
+                                        list_c_errors_new[list_molecules[i]] = (
+                                            result_refit.params['c' + str(i + 1)].stderr/result_refit.best_values['c' + str(i + 1)])
+                                    else:
+                                        list_c_errors_new[list_molecules[i]] = 0
                             correctness_count = 0
                             for i in range(len(list_molecules)):
-                                print(np.abs(
-                                    c_list_new[list_molecules[i]] - c_list_old[list_molecules[i]]) /
-                                      c_list_old[list_molecules[i]])
                                 if (np.abs(
-                                        c_list_new[list_molecules[i]] - c_list_old[list_molecules[i]]) /
-                                    c_list_old[
+                                        list_c_new[list_molecules[i]] - list_c_old[list_molecules[i]]) /
+                                    list_c_old[
                                         list_molecules[i]] > 0.005 or
-                                    np.abs(c_list_new[list_molecules[i]] - c_list_old[
+                                    np.abs(list_c_new[list_molecules[i]] - list_c_old[
                                         list_molecules[i]])) < 1 * 10 ** -6:
                                     correctness_count += 1
 
-                                c_list_old[list_molecules[i]] = c_list_new[list_molecules[i]]
+                                list_c_old[list_molecules[i]] = list_c_new[list_molecules[i]]
+                                print(list_c_errors_old, list_c_errors_new)
+                                list_c_errors_old[list_molecules[i]] += list_c_errors_new[list_molecules[i]]
                             if correctness_count == 0:
                                 refit_bool = False
 
@@ -525,7 +548,7 @@ class WorkerFTIRFitter(QObject):
                     for mol_i in range(len(dict_molecules)):
                         molecule = list(dict_molecules.keys())[mol_i]
                         spectrum_dictionary_final[molecule] = GFL.spectrum_in_air_creator(mol=molecule,
-                                                                                          mf=c_list_new[molecule],
+                                                                                          mf=list_c_new[molecule],
                                                                                           pres=pressure, temp=temperature,
                                                                                           path_l=pathlength,
                                                                                           wl_min=self.wlmin, wl_max=self.wlmax,
@@ -558,10 +581,11 @@ class WorkerFTIRFitter(QObject):
                                          units={"transmittance": ""}, conditions={"path_length": pathlength})
                     spec_new_final.resample(w_exp, inplace=True)
                     w_new2, t_new2 = spec_new_final.get("transmittance")
-                    residual = t_exp - t_new2
+                    residual = t_exp_baseline_corrected - result_refit.best_fit
                     for mol_i in range(len(dict_molecules)):
                         molecule = list(dict_molecules.keys())[mol_i]
-                        dict_molecules[molecule] = c_list_new[molecule]
+                        dict_molecules[molecule] = list_c_new[molecule]
+                        dict_molecules_errors[molecule] = list_c_errors_old[molecule]*list_c_new[molecule]
 
                     for mol_i in range(len(list_molecules)):
                         if dict_molecules[list_molecules[mol_i]] < 1 * 10 ** -6:
@@ -573,10 +597,10 @@ class WorkerFTIRFitter(QObject):
                                 "Mole fraction " + str(list_molecules[mol_i]) + ": " + str(dict_molecules[list_molecules[mol_i]]))
 
                     self.signal_fitting_plot.emit(
-                        ["ftir_fitting_" + current_file, w_new2, t_exp, t_new2, residual])
-                    with h5py.File(
+                        ["ftir_fitting_" + current_file, w_new2, t_exp, result_refit.best_fit, residual])
+                    with (h5py.File(
                             self.parent.tab_ftir_fitting.directory_save_invenioR_processed + "\\" + "Measurement_file.h5",
-                            "r+") as hf:
+                            "r+") as hf):
                         if hf["Temperature"][index] != temperature:
                             hf["Temperature"][index] = temperature
                         if hf["Pressure"][index] != pressure:
@@ -584,6 +608,8 @@ class WorkerFTIRFitter(QObject):
 
                         for mol_i in range(len(list_molecules)):
                             hf[list_molecules[mol_i] + "_concentration"][index] = dict_molecules[list_molecules[mol_i]]
+                            hf[list_molecules[mol_i] + "_concentration_errors"][index] = \
+                                dict_molecules_errors[list_molecules[mol_i]]
 
                     self.tab.layout.label_info_fit.setText("Fitting for " + current_file + " made")
                 else:
@@ -871,9 +897,8 @@ class WorkerFTIRFitter(QObject):
                                     dict_t_refit[molecule] = \
                                     spectrum_dictionary_refit[molecule].get("transmittance_noslit")[1]
 
-                                GMSL.storage_for_dict(dict_w_refit, dict_t_refit, pathlength, 0.30926986906880655,
-                                                      -0.029658974698683054,
-                                                      -0.1354505376341063)
+                                GMSL.storage_for_dict(dict_w_refit, dict_t_refit, pathlength,self.tab.slit_size, self.tab.offset_left,
+                                          self.tab.offset_right)
 
                                 model_refit = Model(self.fitting_functions[len(list_molecules) - 1])
                                 if len(list_molecules) == 1:
@@ -964,7 +989,7 @@ class WorkerFTIRFitter(QObject):
                                              units={"transmittance": ""}, conditions={"path_length": pathlength})
                         spec_new2.resample(w_exp, inplace=True)
                         w_new2, t_new2 = spec_new2.get("transmittance")
-                        residual = t_exp - t_new2
+                        residual = t_exp_baseline_corrected - result_refit.best_fit
                         values_now = []
                         for mol_i in range(len(dict_molecules)):
                             molecule = list(dict_molecules.keys())[mol_i]
@@ -981,7 +1006,7 @@ class WorkerFTIRFitter(QObject):
                                     dict_molecules[list_molecules[mol_i]][index]))
 
                         self.signal_fitting_plot.emit(
-                            ["ftir_fitting_" + current_file, w_new2, t_exp, t_new2, residual])
+                            ["ftir_fitting_" + current_file, w_new2, t_exp, result_refit.best_fit, residual])
                         with h5py.File(self.tab.directory_save_invenioR_processed + "\\" + "Measurement_file.h5",
                                        "r+") as hf:
                             if hf["Temperature"][index] != temperature:

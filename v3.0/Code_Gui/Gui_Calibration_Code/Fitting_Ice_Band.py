@@ -90,7 +90,7 @@ def fit_baseline(w, a, a_b, bool):
 
     return baseline
 
-
+"""
 directory = "C:\\Users\\P70085588\\Data\\Invenio-r\\2023\\07\\19\\MCT_time_effects\\"
 
 files_in_directory_temp = [f for f in os.listdir(directory) if op.isfile(op.join(directory, f))]
@@ -162,4 +162,4 @@ for i in range(0, len(files_in_directory_temp)):
 print("center:", list_g_c)
 print("sigma:", list_g_s)
 
-
+"""

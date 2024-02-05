@@ -43,8 +43,8 @@ base = "Win32GUI" if sys.platform == "win32" else None
 
 setup(
     name="FTIR_GUI",
-    version="2.0",
+    version="3.0",
     optimize=2,
     description="A GUI that can be used to both simulate FTIR spectra or fit concentrations to experimental FTIR data.",
     options={"build_exe":build_exe_options},
-    executables=[Executable("C:/Users/P70085588/Documents/General_CCE/PycharmProjects/Project_Gui/Code_Gui/FTIR_GUI.py", base=base)],)
+    executables=[Executable("C:/Users/P70085588/Documents/General_CCE/PycharmProjects/Project_Gui/Code_Gui/FTIR_GUI.py", base=base, icon="Spherical_Cow_NoBackground.ico")],)
