@@ -46,4 +46,3 @@ There are three possible options for someone to use this GUI:
 -  The last option would be to us python to directly create the GUI. For this, one needs to install al the files within the folder and copy-paste the files inside into a single python environment. Once this is done, once can run the "FTIR-GUI.py"-file. After a few second, this will open GUI. Important to note: everytime one wants to open this GUI now, one will need to do this via python. No stand-alone GUI is now created.
 
 
-# Possible updates
