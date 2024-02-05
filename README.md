@@ -4,6 +4,7 @@ Fully open source Gui made for FTIR simulation/data analysis. Both are done via 
 # Purpose
 This GUI can be used for both for the simulating of theoretical FTIR spectra or for the fitting to experimental FTIR spectra. For both, a tab has been created within the GUI. 
 
+## fef
 ![Tab1](https://github.com/StijnHelsl98t/GUI_FTIR/assets/133780753/ae29160f-8db5-4146-b377-2d4f056d9a5e)
 
 
