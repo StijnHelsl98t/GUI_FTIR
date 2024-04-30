@@ -1,1 +1,9 @@
-
+@misc{Stijn2024,
+  author = "Stijn Helsloot",
+  title = "FTIR-GUI",
+  year = "2024",
+  version = "3.0"
+  publisher = "GitHub",
+  journal = "GitHub repository",
+  howpublished = "\url{}"
+}
