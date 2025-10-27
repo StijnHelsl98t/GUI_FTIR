@@ -19,6 +19,7 @@ import os.path as op
 import matplotlib as mpl
 from matplotlib.figure import Figure
 from lmfit import Model
+import matplotlib.pyplot as plt
 
 
 class WorkerPlotter(QObject):
@@ -33,6 +34,13 @@ class WorkerPlotter(QObject):
         self.font_title = QFont("Times", 16)
 
     def create_empty_plot(self, name):
+        """
+        Function that is capable of creating a directory where the different graphs are stored and shown within our GUI.
+        Using a directory also makes it easier to call upon the created graphs later.
+
+        :param name: The name we give to each plot within our "saving"-directory
+        :return:
+        """
         if name not in self.dict_plots.keys():
             self.dict_plots[name] = pg.GraphicsLayoutWidget()
         else:
@@ -42,6 +50,12 @@ class WorkerPlotter(QObject):
         return self.dict_plots[name]
 
     def single_transmission_plot(self, data):
+        """
+        This function creates a single data plot. Can not be used to make multiple
+
+        :param data: a list that contains both the name of the graph as well as the data one wants to plot
+        :return: -
+        """
         name = data[0]
 
         self.dict_plots[name].p1 = self.dict_plots[name].addPlot(0, 0)
@@ -59,6 +73,7 @@ class WorkerPlotter(QObject):
         self.dict_plots[name].p1.legend.mouseDragEvent = lambda *args, **kwargs: None
         self.dict_plots[name].p1.legend.anchor((1, 0), (1, 0))
 
+        # Plot the data as well as save the x- and y-data
         self.dict_plots[name].p1.x = data[1]
         if self.parent.tab_ftir_simulator.absorbance_bool:
             self.dict_plots[name].p1.y = GFL.tr_to_ab(data[2])
@@ -70,6 +85,13 @@ class WorkerPlotter(QObject):
                                           pen=self.dict_plots[name].p1.pen)
 
     def update_single_transmission_plot(self, data):
+        """
+        Function that updates previously created graphs, by rewriting the data inside of it. We also change the range of
+        the y-range, so that all the data is present and as clearly visible as possible.
+
+        :param data: a list that contains both the name of the graph as well as the data one wants to plot
+        :return: -
+        """
         name = ""
         if len(data) == 2:
             name = data[0]
@@ -89,6 +111,14 @@ class WorkerPlotter(QObject):
         self.dict_plots[name].p1.enableAutoRange('y', enable=True)
 
     def update_fitting_and_residual_plot(self, data):
+        """
+        Function that updates previously created graphs, by rewriting the data inside of it. We also change the range of
+        the y-range, so that all the data is present and as clearly visible as possible.
+
+        :param data: a list that contains both the name of the graph as well as the data one wants to plot
+        :return: -
+        """
+
         name = data[0]
 
         if len(data) == 2:
@@ -128,6 +158,16 @@ class WorkerPlotter(QObject):
         self.dict_plots[name].p2.enableAutoRange('y', enable=True)
 
     def fitting_and_residual_plot(self, data):
+        """
+        This function creates a single figure, split into two plots. Into the first, both the experimental data as well
+        as the theoretical fit to this experimental data is plotted. Into the second, the residual is plotted, to show
+        how big the error is.
+
+        :param data: a list that contains both the name of the graph as well as the data (for exp, fit and res) one
+        wants to plot
+        :return: -
+        """
+
         name = data[0]
         x = data[1]
         y = data[2]
@@ -333,15 +373,17 @@ class WorkerFTIRFitter(QObject):
                         elif not len(dict_molecules[list_molecules[mol_i]]) == len_files_in_dir:
                             dict_molecules[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
                             dict_molecules_errors[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
+
                         if list_molecules[mol_i] + "_concentration" not in keys:
                             hf.create_dataset(list_molecules[mol_i] + "_concentration",
-                                              data=np.zeros(len(files_in_directory)))
-                        elif list_molecules[mol_i] + "_concentration_errors" not in keys:
-                            hf.create_dataset(list_molecules[mol_i] + "_concentration_errors",
                                               data=np.zeros(len(files_in_directory)))
                         elif not len(hf[list_molecules[mol_i] + "_concentration"]) == len_files_in_dir:
                             del hf[list_molecules[mol_i] + "_concentration"]
                             hf.create_dataset(list_molecules[mol_i] + "_concentration",
+                                              data=np.zeros(len(files_in_directory)))
+
+                        if list_molecules[mol_i] + "_concentration_errors" not in keys:
+                            hf.create_dataset(list_molecules[mol_i] + "_concentration_errors",
                                               data=np.zeros(len(files_in_directory)))
                         elif not len(hf[list_molecules[mol_i] + "_concentration_errors"]) == len_files_in_dir:
                             del hf[list_molecules[mol_i] + "_concentration_errors"]
@@ -399,6 +441,7 @@ class WorkerFTIRFitter(QObject):
 
                     a_exp_baseline_corrected = a_exp - bas
                     t_exp_baseline_corrected = GFL.ab_to_tr(a_exp_baseline_corrected)
+
                     dict_molecules = {}
                     for mol_i in range(len(list_molecules)):
                         dict_molecules[list_molecules[mol_i]] = 0.001
@@ -416,26 +459,26 @@ class WorkerFTIRFitter(QObject):
                         dict_w[molecule] = spectrum_dictionary[molecule].get("transmittance_noslit")[0]
                         dict_t[molecule] = spectrum_dictionary[molecule].get("transmittance_noslit")[1]
 
-                    GMSL.storage_for_dict(dict_w, dict_t, pathlength, self.tab.slit_size, self.tab.offset_left,
-                                          self.tab.offset_right)
+                    GMSL.storage_for_dict(dict_w, dict_t, pathlength, self.tab.slit_size, self.tab.k0,
+                                          self.tab.k1)
                     model = Model(self.fitting_functions[len(list_molecules) - 1])
                     if len(list_molecules) == 1:
-                        params = model.make_params(c1=1)
+                        params = model.make_params(k0 =-0.001120285207139915,c1=1)
                     elif len(list_molecules) == 2:
-                        params = model.make_params(c1=1,c2=1)
+                        params = model.make_params(k0 =-0.001120285207139915,c1=1,c2=1)
                     elif len(list_molecules) == 3:
-                        params = model.make_params(c1=1,c2=1,c3=1)
+                        params = model.make_params(k0 =-0.001120285207139915,c1=1,c2=1,c3=1)
                     elif len(list_molecules) == 4:
-                        params = model.make_params(c1=1,c2=1,c3=1,c4=1)
+                        params = model.make_params(k0 =-0.001120285207139915,c1=1,c2=1,c3=1,c4=1)
                     elif len(list_molecules) == 5:
-                        params = model.make_params(c1=1,c2=1,c3=1,c4=1,c5=1)
+                        params = model.make_params(k0 =-0.001120285207139915,c1=1,c2=1,c3=1,c4=1,c5=1)
                     elif len(list_molecules) == 6:
-                        params = model.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1)
+                        params = model.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1)
                     elif len(list_molecules) == 7:
-                        params = model.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1)
+                        params = model.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1)
                     elif len(list_molecules) == 8:
-                        params = model.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1, c8=1)
-
+                        params = model.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1, c8=1)
+                    params['k0'].set(min=-1, max=1)
                     for i in range(len(list_molecules)):
                         params['c' + str(i+1)].set(min=-0.001, max=1000)
 
@@ -481,28 +524,28 @@ class WorkerFTIRFitter(QObject):
                                 dict_t_refit[molecule] = \
                                     spectrum_dictionary_refit[molecule].get("transmittance_noslit")[1]
 
-                            GMSL.storage_for_dict(dict_w_refit, dict_t_refit, pathlength,self.tab.slit_size, self.tab.offset_left,
-                                          self.tab.offset_right)
+                            GMSL.storage_for_dict(dict_w_refit, dict_t_refit, pathlength,self.tab.slit_size, self.tab.k0,
+                                          self.tab.k1)
 
                             model_refit = Model(self.fitting_functions[len(list_molecules) - 1])
                             if len(list_molecules) == 1:
-                                params_refit = model_refit.make_params(c1=1)
+                                params_refit = model_refit.make_params(k0 =-0.001120285207139915,c1=1)
                             elif len(list_molecules) == 2:
-                                params_refit = model_refit.make_params(c1=1, c2=1)
+                                params_refit = model_refit.make_params(k0 =-0.001120285207139915,c1=1, c2=1)
                             elif len(list_molecules) == 3:
-                                params_refit = model_refit.make_params(c1=1, c2=1, c3=1)
+                                params_refit = model_refit.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1)
                             elif len(list_molecules) == 4:
-                                params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1)
+                                params_refit = model_refit.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1, c4=1)
                             elif len(list_molecules) == 5:
-                                params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1, c5=1)
+                                params_refit = model_refit.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1)
                             elif len(list_molecules) == 6:
-                                params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1)
+                                params_refit = model_refit.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1)
                             elif len(list_molecules) == 7:
-                                params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1)
+                                params_refit = model_refit.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1)
                             elif len(list_molecules) == 8:
-                                params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1,
+                                params_refit = model_refit.make_params(k0 =-0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1,
                                                                        c8=1)
-
+                            params['k0'].set(min=-1, max=1)
                             for i in range(len(list_molecules)):
                                 params_refit['c' + str(i + 1)].set(min=0.8, max=1.2)
 
@@ -539,49 +582,7 @@ class WorkerFTIRFitter(QObject):
                             if correctness_count == 0:
                                 refit_bool = False
 
-                    spectrum_dictionary_final = {}
-                    molecule_final = list(dict_molecules.keys())[0]
-                    dict_w_final = {}
-                    dict_t_final = {}
-                    dict_a_final = {}
-                    a_full = []
-                    for mol_i in range(len(dict_molecules)):
-                        molecule = list(dict_molecules.keys())[mol_i]
-                        spectrum_dictionary_final[molecule] = GFL.spectrum_in_air_creator(mol=molecule,
-                                                                                          mf=list_c_new[molecule],
-                                                                                          pres=pressure, temp=temperature,
-                                                                                          path_l=pathlength,
-                                                                                          wl_min=self.wlmin, wl_max=self.wlmax,
-                                                                                          step=0.001)
-                        dict_w_final[molecule] = spectrum_dictionary_final[molecule].get("transmittance_noslit")[0]
-                        dict_t_final[molecule] = spectrum_dictionary_final[molecule].get("transmittance_noslit")[1]
-                        dict_a_final[molecule] = GFL.tr_to_ab(dict_t_final[molecule])
-                        if mol_i == 0:
-                            a_full = dict_a_final[molecule]
-                        else:
-                            a_full += dict_a_final[molecule]
-                    t_full = GFL.ab_to_tr(a_full)
-
-                    spec_new2 = Spectrum({"wavenumber": dict_w_final[molecule_final], "transmittance_noslit": t_full},
-                                         wunit='cm-1',
-                                         units={"transmittance_noslit": ""})
-
-                    spec_new2.apply_slit(self.tab.slit_size, unit="cm-1", norm_by="area", inplace=True)
-
-                    w_temp, t_temp = spec_new2.get("transmittance")
-                    offset_a = (self.tab.offset_right - self.tab.offset_left) / (4000 - 1000)
-                    offset_b = self.tab.offset_right - offset_a * 4000
-
-                    list_offset_temp = offset_a * w_temp + offset_b
-
-                    w_new_temp = np.zeros(len(w_temp))
-                    for i in range(len(w_temp)):
-                        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
-                    spec_new_final = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
-                                         units={"transmittance": ""}, conditions={"path_length": pathlength})
-                    spec_new_final.resample(w_exp, inplace=True)
-                    w_new2, t_new2 = spec_new_final.get("transmittance")
-                    residual = t_exp_baseline_corrected - result_refit.best_fit
+                    residual = (t_exp_baseline_corrected - result_refit.best_fit)/t_exp_baseline_corrected
                     for mol_i in range(len(dict_molecules)):
                         molecule = list(dict_molecules.keys())[mol_i]
                         dict_molecules[molecule] = list_c_new[molecule]
@@ -597,7 +598,7 @@ class WorkerFTIRFitter(QObject):
                                 "Mole fraction " + str(list_molecules[mol_i]) + ": " + str(dict_molecules[list_molecules[mol_i]]))
 
                     self.signal_fitting_plot.emit(
-                        ["ftir_fitting_" + current_file, w_new2, t_exp, result_refit.best_fit, residual])
+                        ["ftir_fitting_" + current_file, w_exp, t_exp, result_refit.best_fit, residual])
                     with (h5py.File(
                             self.parent.tab_ftir_fitting.directory_save_invenioR_processed + "\\" + "Measurement_file.h5",
                             "r+") as hf):
@@ -618,7 +619,6 @@ class WorkerFTIRFitter(QObject):
                 self.tab.layout.label_info_fit.setText("Can't fit, "
                                                        "incorrect/no molecules, pressure, "
                                                        "temperature or pathlength")
-
     def ftir_fit_all(self, s):
         self.tab = self.parent.tab_ftir_fitting
         self.inner_tab = self.tab.inner_tab
@@ -626,6 +626,7 @@ class WorkerFTIRFitter(QObject):
         len_files_in_dir = len(files_in_directory)
         list_molecules = self.tab.molecule_storage_for_fitting
         dict_molecules = {}
+        dict_molecules_errors = {}
         all_fits_made_bool = False
 
         list_time = []
@@ -786,8 +787,11 @@ class WorkerFTIRFitter(QObject):
                             for mol_i in range(len(list_molecules)):
                                 if list_molecules[mol_i] not in list(dict_molecules.keys()):
                                     dict_molecules[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
+                                    dict_molecules_errors[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
                                 elif not len(dict_molecules[list_molecules[mol_i]]) == len_files_in_dir:
                                     dict_molecules[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
+                                    dict_molecules_errors[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
+
                                 if list_molecules[mol_i] + "_concentration" not in keys:
                                     hf.create_dataset(list_molecules[mol_i] + "_concentration",
                                                       data=np.zeros(len(files_in_directory)))
@@ -796,17 +800,12 @@ class WorkerFTIRFitter(QObject):
                                     hf.create_dataset(list_molecules[mol_i] + "_concentration",
                                                       data=np.zeros(len(files_in_directory)))
 
-                            for mol_i in range(len(list_molecules)):
-                                if list_molecules[mol_i] not in list(dict_molecules.keys()):
-                                    dict_molecules[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
-                                elif not len(dict_molecules[list_molecules[mol_i]]) == len_files_in_dir:
-                                    dict_molecules[list_molecules[mol_i]] = np.zeros(len(files_in_directory))
-                                if list_molecules[mol_i] + "_concentration" not in keys:
-                                    hf.create_dataset(list_molecules[mol_i] + "_concentration",
+                                if list_molecules[mol_i] + "_concentration_errors" not in keys:
+                                    hf.create_dataset(list_molecules[mol_i] + "_concentration_errors",
                                                       data=np.zeros(len(files_in_directory)))
-                                elif not len(hf[list_molecules[mol_i] + "_concentration"]) == len_files_in_dir:
-                                    del hf[list_molecules[mol_i] + "_concentration"]
-                                    hf.create_dataset(list_molecules[mol_i] + "_concentration",
+                                elif not len(hf[list_molecules[mol_i] + "_concentration_errors"]) == len_files_in_dir:
+                                    del hf[list_molecules[mol_i] + "_concentration_errors"]
+                                    hf.create_dataset(list_molecules[mol_i] + "_concentration_errors",
                                                       data=np.zeros(len(files_in_directory)))
 
                         w_exp, t_exp = self.inner_tab.w_dict[current_file], self.inner_tab.t_dict[current_file]
@@ -842,42 +841,53 @@ class WorkerFTIRFitter(QObject):
                             dict_w[molecule] = spectrum_dictionary[molecule].get("transmittance_noslit")[0]
                             dict_t[molecule] = spectrum_dictionary[molecule].get("transmittance_noslit")[1]
 
-                        GMSL.storage_for_dict(dict_w, dict_t, pathlength, self.tab.slit_size, self.tab.offset_left,
-                                              self.tab.offset_right)
+                        GMSL.storage_for_dict(dict_w, dict_t, pathlength, self.tab.slit_size, self.tab.k0,
+                                              self.tab.k1)
+
 
                         model = Model(self.fitting_functions[len(list_molecules) - 1])
                         if len(list_molecules) == 1:
-                            params = model.make_params(c1=1)
+                            params = model.make_params(k0 =-0.001120285207139915, c1=1)
                         elif len(list_molecules) == 2:
-                            params = model.make_params(c1=1, c2=1)
+                            params = model.make_params(k0 =-0.001120285207139915,c1=1, c2=1)
                         elif len(list_molecules) == 3:
-                            params = model.make_params(c1=1, c2=1, c3=1)
+                            params = model.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1)
                         elif len(list_molecules) == 4:
-                            params = model.make_params(c1=1, c2=1, c3=1, c4=1)
+                            params = model.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1)
                         elif len(list_molecules) == 5:
-                            params = model.make_params(c1=1, c2=1, c3=1, c4=1, c5=1)
+                            params = model.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1)
                         elif len(list_molecules) == 6:
-                            params = model.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1)
+                            params = model.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1)
                         elif len(list_molecules) == 7:
-                            params = model.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1)
+                            params = model.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1)
                         elif len(list_molecules) == 8:
-                            params = model.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1, c8=1)
+                            params = model.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1, c8=1)
 
+                        params['k0'].set(min=-1,max=1)
                         for i in range(len(list_molecules)):
                             params['c' + str(i + 1)].set(min=-0.001, max=1000)
                         result = model.fit(t_exp_baseline_corrected, params, w=w_exp)
 
-                        c_list_old = {}
+                        list_c_old = {}
+                        c_list_minus = {}
+                        list_c_errors_old = {}
+
                         for i in range(len(list_molecules)):
                             if result.best_values['c' + str(i + 1)] * dict_molecules[list_molecules[i]][index] < 0:
-                                c_list_old[list_molecules[i]] = 0
+                                list_c_old[list_molecules[i]] = 0
+                                list_c_errors_old[list_molecules[i]] = 0
+                                c_list_minus[list_molecules[i]] = result.best_values['c' + str(i + 1)] * dict_molecules[
+                                    list_molecules[i]][index]
                             else:
-                                c_list_old[list_molecules[i]] = result.best_values['c' + str(i + 1)] * dict_molecules[
+                                list_c_old[list_molecules[i]] = result.best_values['c' + str(i + 1)] * dict_molecules[
                                     list_molecules[i]][index]
 
+                                list_c_errors_old[list_molecules[i]] = (
+                                        result.params['c' + str(i + 1)].stderr / result.best_values['c' + str(i + 1)])
                         # Re-fit if needed
                         refit_bool = True
                         for fit_i in range(5):
+                            print(fit_i)
                             if refit_bool:
                                 spectrum_dictionary_refit = {}
                                 dict_w_refit = {}
@@ -886,115 +896,82 @@ class WorkerFTIRFitter(QObject):
                                     molecule = list(dict_molecules.keys())[mol_i]
                                     spectrum_dictionary_refit[molecule] = (
                                         GFL.spectrum_in_air_creator(mol=molecule,
-                                                                    mf=c_list_old[molecule],
+                                                                    mf=list_c_old[molecule],
                                                                     pres=pressure, temp=temperature,
                                                                     path_l=pathlength,
                                                                     wl_min=self.wlmin,
                                                                     wl_max=self.wlmax,
                                                                     step=0.001))
                                     dict_w_refit[molecule] = \
-                                    spectrum_dictionary_refit[molecule].get("transmittance_noslit")[0]
+                                        spectrum_dictionary_refit[molecule].get("transmittance_noslit")[0]
                                     dict_t_refit[molecule] = \
-                                    spectrum_dictionary_refit[molecule].get("transmittance_noslit")[1]
+                                        spectrum_dictionary_refit[molecule].get("transmittance_noslit")[1]
 
-                                GMSL.storage_for_dict(dict_w_refit, dict_t_refit, pathlength,self.tab.slit_size, self.tab.offset_left,
-                                          self.tab.offset_right)
+                                GMSL.storage_for_dict(dict_w_refit, dict_t_refit, pathlength, self.tab.slit_size,
+                                                      self.tab.k0,
+                                                      self.tab.k1)
 
                                 model_refit = Model(self.fitting_functions[len(list_molecules) - 1])
                                 if len(list_molecules) == 1:
-                                    params_refit = model_refit.make_params(c1=1)
+                                    params_refit = model_refit.make_params(k0 =  -0.001120285207139915,c1=1)
                                 elif len(list_molecules) == 2:
-                                    params_refit = model_refit.make_params(c1=1, c2=1)
+                                    params_refit = model_refit.make_params(k0 =  -0.001120285207139915,c1=1, c2=1)
                                 elif len(list_molecules) == 3:
-                                    params_refit = model_refit.make_params(c1=1, c2=1, c3=1)
+                                    params_refit = model_refit.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1)
                                 elif len(list_molecules) == 4:
-                                    params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1)
+                                    params_refit = model_refit.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1)
                                 elif len(list_molecules) == 5:
-                                    params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1, c5=1)
+                                    params_refit = model_refit.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1)
                                 elif len(list_molecules) == 6:
-                                    params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1)
+                                    params_refit = model_refit.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1)
                                 elif len(list_molecules) == 7:
-                                    params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1)
+                                    params_refit = model_refit.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1)
                                 elif len(list_molecules) == 8:
-                                    params_refit = model_refit.make_params(c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1,
+                                    params_refit = model_refit.make_params(k0 =  -0.001120285207139915,c1=1, c2=1, c3=1, c4=1, c5=1, c6=1, c7=1,
                                                                            c8=1)
-
+                                params_refit['k0'].set(min=-1, max=1)
                                 for i in range(len(list_molecules)):
                                     params_refit['c' + str(i + 1)].set(min=0.8, max=1.2)
 
                                 result_refit = model_refit.fit(t_exp, params_refit, w=w_exp)
 
-                                c_list_new = {}
+                                list_c_new = {}
+                                list_c_errors_new = {}
                                 for i in range(len(list_molecules)):
-                                    if result_refit.best_values['c' + str(i + 1)] * c_list_old[list_molecules[i]] < 0:
-                                        c_list_new[list_molecules[i]] = 0
+                                    if result_refit.best_values['c' + str(i + 1)] * list_c_old[list_molecules[i]] < 0:
+                                        list_c_new[list_molecules[i]] = 0
+                                        list_c_errors_new[list_molecules[i]] = 0
                                     else:
-                                        c_list_new[list_molecules[i]] = result_refit.best_values['c' + str(i + 1)] * \
-                                                                    c_list_old[
-                                                                        list_molecules[i]]
+                                        list_c_new[list_molecules[i]] = result_refit.best_values['c' + str(i + 1)] * \
+                                                                        list_c_old[list_molecules[i]]
+
+                                        if result_refit.params['c' + str(i + 1)].stderr is not None:
+                                            list_c_errors_new[list_molecules[i]] = (
+                                                    result_refit.params['c' + str(i + 1)].stderr /
+                                                    result_refit.best_values['c' + str(i + 1)])
+                                        else:
+                                            list_c_errors_new[list_molecules[i]] = 0
                                 correctness_count = 0
                                 for i in range(len(list_molecules)):
-                                    if (np.abs(c_list_new[list_molecules[i]] - c_list_old[list_molecules[i]]) /
-                                        c_list_old[
+                                    if (np.abs(
+                                            list_c_new[list_molecules[i]] - list_c_old[list_molecules[i]]) /
+                                        list_c_old[
                                             list_molecules[i]] > 0.005 or
-                                        np.abs(c_list_new[list_molecules[i]] - c_list_old[
+                                        np.abs(list_c_new[list_molecules[i]] - list_c_old[
                                             list_molecules[i]])) < 1 * 10 ** -6:
                                         correctness_count += 1
 
-                                    c_list_old[list_molecules[i]] = c_list_new[list_molecules[i]]
+                                    list_c_old[list_molecules[i]] = list_c_new[list_molecules[i]]
+                                    print(list_c_errors_old, list_c_errors_new)
+                                    list_c_errors_old[list_molecules[i]] += list_c_errors_new[list_molecules[i]]
                                 if correctness_count == 0:
                                     refit_bool = False
 
-                        spectrum_dictionary_final = {}
-                        molecule_final = list(dict_molecules.keys())[0]
-                        dict_w_final = {}
-                        dict_t_final = {}
-                        dict_a_final = {}
-                        a_full = []
+                        residual = (t_exp_baseline_corrected - result_refit.best_fit) / t_exp_baseline_corrected
                         for mol_i in range(len(dict_molecules)):
                             molecule = list(dict_molecules.keys())[mol_i]
-                            spectrum_dictionary_final[molecule] = GFL.spectrum_in_air_creator(
-                                mol=molecule,
-                                mf=c_list_new[molecule],
-                                pres=pressure,
-                                temp=temperature,
-                                path_l=pathlength,
-                                wl_min=self.wlmin, wl_max=self.wlmax,
-                                step=0.001)
-                            dict_w_final[molecule] = spectrum_dictionary_final[molecule].get("transmittance_noslit")[0]
-                            dict_t_final[molecule] = spectrum_dictionary_final[molecule].get("transmittance_noslit")[1]
-                            dict_a_final[molecule] = GFL.tr_to_ab(dict_t_final[molecule])
-                            if mol_i == 0:
-                                a_full = dict_a_final[molecule]
-                            else:
-                                a_full += dict_a_final[molecule]
-                        t_full = GFL.ab_to_tr(a_full)
-                        spec_new2 = Spectrum({"wavenumber": dict_w_final[molecule_final], "transmittance_noslit": t_full},
-                                             wunit='cm-1',
-                                             units={"transmittance_noslit": ""})
-
-                        spec_new2.apply_slit(self.tab.slit_size, unit="cm-1", norm_by="area", inplace=True, shape="gaussian")
-
-                        w_temp, t_temp = spec_new2.get("transmittance")
-
-                        offset_a = (self.tab.offset_right - self.tab.offset_left) / (4000 - 1000)
-                        offset_b = self.tab.offset_right - offset_a * 4000
-
-                        list_offset_temp = offset_a * w_temp + offset_b
-
-                        w_new_temp = np.zeros(len(w_temp))
-                        for i in range(len(w_temp)):
-                            w_new_temp[i] = w_temp[i] + list_offset_temp[i]
-                        spec_new2 = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
-                                             units={"transmittance": ""}, conditions={"path_length": pathlength})
-                        spec_new2.resample(w_exp, inplace=True)
-                        w_new2, t_new2 = spec_new2.get("transmittance")
-                        residual = t_exp_baseline_corrected - result_refit.best_fit
-                        values_now = []
-                        for mol_i in range(len(dict_molecules)):
-                            molecule = list(dict_molecules.keys())[mol_i]
-                            dict_molecules[molecule][index] = c_list_new[molecule]
-                            values_now.append(dict_molecules[molecule][index])
+                            dict_molecules[molecule][index] = list_c_new[molecule]
+                            dict_molecules_errors[molecule][index] = list_c_errors_old[molecule] * list_c_new[molecule]
 
                         for mol_i in range(len(list_molecules)):
                             if dict_molecules[list_molecules[mol_i]][index] < 1 * 10 ** -6:
@@ -1006,7 +983,7 @@ class WorkerFTIRFitter(QObject):
                                     dict_molecules[list_molecules[mol_i]][index]))
 
                         self.signal_fitting_plot.emit(
-                            ["ftir_fitting_" + current_file, w_new2, t_exp, result_refit.best_fit, residual])
+                            ["ftir_fitting_" + current_file, w_exp, t_exp, result_refit.best_fit, residual])
                         with h5py.File(self.tab.directory_save_invenioR_processed + "\\" + "Measurement_file.h5",
                                        "r+") as hf:
                             if hf["Temperature"][index] != temperature:
@@ -1014,7 +991,10 @@ class WorkerFTIRFitter(QObject):
                             if hf["Pressure"][index] != pressure:
                                 hf["Pressure"][index] = pressure
                             for mol_i in range(len(list_molecules)):
-                                hf[list_molecules[mol_i] + "_concentration"][index] = dict_molecules[list_molecules[mol_i]][index]
+                                hf[list_molecules[mol_i] + "_concentration"][index] = dict_molecules[
+                                    list_molecules[mol_i]][index]
+                                hf[list_molecules[mol_i] + "_concentration_errors"][index] = \
+                                    dict_molecules_errors[list_molecules[mol_i]][index]
 
                         self.tab.layout.label_info_fit.setText("Fitting for " + current_file + " made")
                         all_fits_made_bool = True

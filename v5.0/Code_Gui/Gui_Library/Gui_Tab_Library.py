@@ -499,17 +499,17 @@ class create_tab_ftir_fitting(QWidget):
         # Create fitting parameters row
         self.layout.label_slitsize = QLabel("Fitting parameters: \t\t\t\t\t Slit size: ")
         self.layout.label_slitsize.setStyleSheet("font: bold ; font-size:10pt")
-        self.layout.line_edit_slitsize = QLineEdit("0.2811189105899404")
+        self.layout.line_edit_slitsize = QLineEdit("0.2768186233821143")
         self.layout.line_edit_slitsize.textChanged.connect(lambda: self.text_changed("Slit size"))
         self.layout.line_edit_slitsize.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.layout.label_offset_left = QLabel("Offset 1000 cm-1 (if known): ")
-        self.layout.label_offset_left.setStyleSheet("font: bold ; font-size:10pt")
-        self.layout.line_edit_offset_left = QLineEdit("0")
-        self.layout.line_edit_offset_left.textChanged.connect(lambda: self.text_changed("Offset left"))
-        self.layout.label_offset_right = QLabel("Offset 4000 cm-1 (if known): ")
-        self.layout.label_offset_right.setStyleSheet("font: bold ; font-size:10pt")
-        self.layout.line_edit_offset_right = QLineEdit("-0.07691036347075944")
-        self.layout.line_edit_offset_right.textChanged.connect(lambda: self.text_changed("Offset right"))
+        self.layout.label_k0 = QLabel("k0 (if known): ")
+        self.layout.label_k0.setStyleSheet("font: bold ; font-size:10pt")
+        self.layout.line_edit_k0 = QLineEdit("-0.001120285207139915")
+        self.layout.line_edit_k0.textChanged.connect(lambda: self.text_changed("k0"))
+        self.layout.label_k1 = QLabel("k1 (if known): ")
+        self.layout.label_k1.setStyleSheet("font: bold ; font-size:10pt")
+        self.layout.line_edit_k1 = QLineEdit("1.0001065125867772")
+        self.layout.line_edit_k1.textChanged.connect(lambda: self.text_changed("k1"))
         self.layout.button_fit_parameters = QPushButton("Save fitting parameters")
         self.layout.button_fit_parameters.clicked.connect(self.button_pressed)
         self.layout.label_fit_parameters_saved = QLabel("No fitting parameters saved yet")
@@ -517,10 +517,10 @@ class create_tab_ftir_fitting(QWidget):
 
         self.layout.addWidget(self.layout.label_slitsize, 5, 0,1,2)
         self.layout.addWidget(self.layout.line_edit_slitsize, 5, 2,1,1)
-        self.layout.addWidget(self.layout.label_offset_left, 5, 3,1,1)
-        self.layout.addWidget(self.layout.line_edit_offset_left, 5, 4,1,1)
-        self.layout.addWidget(self.layout.label_offset_right, 5, 5,1,1)
-        self.layout.addWidget(self.layout.line_edit_offset_right, 5, 6, 1, 1)
+        self.layout.addWidget(self.layout.label_k0, 5, 3,1,1)
+        self.layout.addWidget(self.layout.line_edit_k0, 5, 4,1,1)
+        self.layout.addWidget(self.layout.label_k1, 5, 5,1,1)
+        self.layout.addWidget(self.layout.line_edit_k1, 5, 6, 1, 1)
         self.layout.addWidget(self.layout.button_fit_parameters, 5, 7, 1, 1)
         self.layout.addWidget(self.layout.label_fit_parameters_saved, 5, 8,1,2)
 
@@ -590,10 +590,10 @@ class create_tab_ftir_fitting(QWidget):
             self.layout.label_wavenumber.setText("Maximum wavenumber changed, no wavenumbers stored yet")
         elif s == "Slit size":
             self.layout.label_fit_parameters_saved.setText("Slit size was changed")
-        elif s == "Offset left":
-            self.layout.label_fit_parameters_saved.setText("Offset 1000 cm-1 was changed")
-        elif s == "Offset right":
-            self.layout.label_fit_parameters_saved.setText("Offset 4000 cm-1 was changed")
+        elif s == "k0":
+            self.layout.label_fit_parameters_saved.setText("k0 was changed")
+        elif s == "k1":
+            self.layout.label_fit_parameters_saved.setText("k1 was changed")
 
     def button_pressed(self,s):
         if self.sender().text() == "Create directory":
@@ -654,8 +654,8 @@ class create_tab_ftir_fitting(QWidget):
         if self.sender().text() == "Save fitting parameters":
             try:
                 self.slit_size = float(self.layout.line_edit_slitsize.text())
-                self.offset_left = float(self.layout.line_edit_offset_left.text())
-                self.offset_right = float(self.layout.line_edit_offset_right.text())
+                self.k0 = float(self.layout.line_edit_k0.text())
+                self.k1 = float(self.layout.line_edit_k1.text())
                 self.layout.label_fit_parameters_saved.setText('Fit parameters stored')
             except:
                 self.layout.label_fit_parameters_saved.setText('Uncorrect fit parameters given')
@@ -711,6 +711,8 @@ class create_inner_tab_ftir_fitting(QTabWidget):
             elif file[-4:] == ".csv":
                 self.files_in_directory.append(file)
             elif file[-4:] == ".dat":
+                self.files_in_directory.append(file)
+            elif file[-4:] == ".tsv":
                 self.files_in_directory.append(file)
         self.array_data = GFL.read_opus_data_from_folder_into_array_for_gui(self.directory)
         self.list_tabs = []

@@ -77,9 +77,10 @@ def spectra_linear_wavenumber_dependent_offset_3_molecules(w, c_ch4, c_h2o, c_co
             t_new[i] = 1
     return t_new
 
-directory = "C:\\Users\\P70085588\\Data\\Invenio-r\\2023\\11\\17\\N2_CH4_Calibration\\"
+directory = "C:\\Users\\P70085588\\Data\\FTIR\\Invenio-r\\2025\\8\\6_2\\"
 
 files_in_directory_temp = [f for f in os.listdir(directory) if op.isfile(op.join(directory, f))]
+print(files_in_directory_temp)
 array_data = GFL.read_opus_data_from_folder_into_array_for_gui(directory)
 c_ch4_list = []
 c_co2_list = []
@@ -95,9 +96,9 @@ for i in range(0, len(files_in_directory_temp)):
     data = array_data[i]
 
     if os.path.exists(data_text_file_selected) and os.stat(data_text_file_selected).st_size > 0:
-        t_list = [298.75,298.75,298.75,298.75,298.75,298.75,298.75]
-        p_list = [1.019,1.019,1.019,1.026,1.026,1.019,1.019]
-        c_list = [0,3000,3000,3000,3000,3000,3000]
+        t_list = [0,298.15,298.25,298.25,298.25,298.25,298.25]
+        p_list = [0,0.0975,0.0977,0.0984,0.0984,0.0975,0.0975]
+        c_list = [0,0.002,0.002,0.0012,0.0012,0.0002,0.0002]
         pathlength_0 = 20.062
 
         w_exp = []
@@ -125,24 +126,27 @@ for i in range(0, len(files_in_directory_temp)):
             wlmin_j= len(w_background)
 
             for j in range(len(w_background)):
-                if w_background[j] >= 1000:
+                if w_background[j] <= 1000:
                     wlmin=w_background[j]
                     wlmin_j = j
-                if w_background[j] >= 4000:
+                    print(wlmin_j)
+                if w_background[j] <= 4000:
                     wlmax=w_background[j]
                     wlmax_j = j
 
-            w_background = w_background[wlmax_j: wlmin_j]
-            t_background = t_background[wlmax_j: wlmin_j]
+
+            w_background = w_background[wlmin_j: wlmax_j]
+            t_background = t_background[wlmin_j: wlmax_j]
             a_background = GFL.tr_to_ab(t_background)
+
 
         else:
             s_exp = Spectrum({"wavenumber": data_wavelength, "transmittance": data_transmission}, wunit='cm-1',
                                  units={"transmittance": ""})
             w_exp, t_exp = s_exp.get("transmittance")
 
-            w_exp = w_exp[wlmax_j: wlmin_j]
-            t_exp = t_exp[wlmax_j: wlmin_j]
+            w_exp = w_exp[wlmin_j: wlmax_j]
+            t_exp = t_exp[wlmin_j: wlmax_j]
             a_exp = GFL.tr_to_ab(t_exp)
 
             bas = GFL.fit_baseline(w_exp, a_exp, a_background,True)
@@ -150,20 +154,20 @@ for i in range(0, len(files_in_directory_temp)):
             t_exp_baseline_corrected = GFL.ab_to_tr(a_exp_baseline_corrected)
 
             for j in range(len(w_background)):
-                if w_background[j] >= 1000:
+                if w_background[j] <= 1000:
                     wlmin2=w_background[j]
                     wlmin_j2 = j
-                if w_background[j] >= 4000:
+                if w_background[j] <= 4000:
                     wlmax2=w_background[j]
                     wlmax_j2 = j
 
-            w_exp = w_exp[wlmax_j2: wlmin_j2]
-            t_exp_baseline_corrected = t_exp_baseline_corrected[wlmax_j2:wlmin_j2]
+            w_exp = w_exp[wlmin_j2:wlmax_j2]
+            t_exp_baseline_corrected = t_exp_baseline_corrected[wlmin_j2:wlmax_j2]
 
             dict_molecules3 = {}
             dict_molecules3["CO2"] = 0.001
             dict_molecules3["H2O"] = 0.001
-            dict_molecules3["CH4"] = 0.003
+            dict_molecules3["CH4"] = c_list[i]
             list_molecules3 = ["CH4", "H2O", "CO2"]
 
             for j in range(len(list_molecules3)):
@@ -173,16 +177,16 @@ for i in range(0, len(files_in_directory_temp)):
                 dict_w3[molecule], dict_t3[molecule] = spec.get("transmittance_noslit")
 
             model3 = Model(spectra_linear_wavenumber_dependent_offset_3_molecules)
-            params3 = model3.make_params(c_ch4=1, c_h2o=1, c_co2=1, offset_left=-0.075, offset_right=-0.14,
-                                         slit_size=0.3)
+            params3 = model3.make_params(c_ch4=1, c_h2o=1, c_co2=1, offset_left=0.10532126639841062, offset_right=0.424534457152614,
+                                         slit_size=0.28249374361976465)
 
 
-            params3['c_ch4'].set(min=0.96, max=1.2)
-            params3['c_h2o'].set(min=0.00001, max=100)
-            params3["c_co2"].set(min=0.00001, max=100)
-            params3['offset_left'].set(min=-0.2, max=0)
-            params3['offset_right'].set(min=-0.2, max=0)
-            params3['slit_size'].set(min=0.26, max=0.35)
+            params3['c_ch4'].set(min=0.95, max=1.05, vary=False)
+            params3['c_h2o'].set(min=0.0, max=1000, vary=True)
+            params3["c_co2"].set(min=0.0, max=1000, vary=True)
+            params3['offset_left'].set(min=0, max=0.6)
+            params3['offset_right'].set(min=0, max=0.6)
+            params3['slit_size'].set(min=0.26, max=1)
             result3 = model3.fit(t_exp_baseline_corrected, params3, w=w_exp)
 
             c_list_old = {}
@@ -193,7 +197,7 @@ for i in range(0, len(files_in_directory_temp)):
             c_list_old["CO2"] = result3.best_values['c_co2'] * dict_molecules3["CO2"]
 
             refit_bool = True
-            for fit_i in range(5):
+            for fit_i in range(1):
                 print(fit_i)
                 if refit_bool:
                     spectrum_dictionary_refit = {}
@@ -215,14 +219,17 @@ for i in range(0, len(files_in_directory_temp)):
                             spectrum_dictionary_refit[molecule].get("transmittance_noslit")[1]
 
                     model_refit = Model(spectra_linear_wavenumber_dependent_offset_3_molecules)
-                    params_refit = model_refit.make_params(c_ch4=1, c_h2o=1, c_co2=1, offset_left=-0.075, offset_right=-0.14,
-                                                 slit_size=0.3)
-                    params_refit['c_ch4'].set(min=0.999, max=1.001)
-                    params_refit['c_h2o'].set(min=0.00001, max=100)
-                    params_refit["c_co2"].set(min=0.00001, max=100)
-                    params_refit['offset_left'].set(min=-0.2, max=0)
-                    params_refit['offset_right'].set(min=-0.2, max=0)
-                    params_refit['slit_size'].set(min=0.26, max=0.35)
+                    params_refit = model_refit.make_params(c_ch4=1, c_h2o=1, c_co2=1,
+                                                           offset_left=result3.best_values['offset_left'],
+                                                           offset_right=result3.best_values['offset_right'],
+                                                           slit_size=result3.best_values['slit_size'])
+
+                    params_refit['c_ch4'].set(min=0.95, max=1.05, vary=True)
+                    params_refit['c_h2o'].set(min=0.95, max=1.05, vary=True)
+                    params_refit["c_co2"].set(min=0.95, max=1.05, vary=True)
+                    params_refit['offset_left'].set(min=0.9*result3.best_values['offset_left'], max=1.1*result3.best_values['offset_left'])
+                    params_refit['offset_right'].set(min=0.9*result3.best_values['offset_right'], max=1.1*result3.best_values['offset_right'])
+                    params_refit['slit_size'].set(min=0.9*result3.best_values['slit_size'], max=1.1*result3.best_values['slit_size'])
                     result_refit = model_refit.fit(t_exp_baseline_corrected, params_refit, w=w_exp)
 
                     c_list_new = {}
@@ -247,12 +254,12 @@ for i in range(0, len(files_in_directory_temp)):
                     if correctness_count == 0:
                         refit_bool = False
 
-            c_h2o_list.append(result_refit.best_values["c_h2o"])
-            c_ch4_list.append(result_refit.best_values["c_ch4"])
-            c_co2_list.append(result_refit.best_values["c_co2"])
-            list_offset_left.append(result_refit.best_values["offset_left"])
-            list_offset_right.append(result_refit.best_values["offset_right"])
-            list_slitsize.append(result_refit.best_values["slit_size"])
+            c_h2o_list.append(result3.best_values["c_h2o"])
+            c_ch4_list.append(result3.best_values["c_ch4"])
+            c_co2_list.append(result3.best_values["c_co2"])
+            list_offset_left.append(result3.best_values["offset_left"])
+            list_offset_right.append(result3.best_values["offset_right"])
+            list_slitsize.append(result3.best_values["slit_size"])
 
             print(c_ch4_list)
             print(c_co2_list)
@@ -264,6 +271,7 @@ for i in range(0, len(files_in_directory_temp)):
 
 
             plt.plot(w_exp, t_exp_baseline_corrected, alpha=0.7)
+            plt.plot(w_exp, result3.best_fit, alpha=0.7)
             plt.plot(w_exp, result_refit.best_fit, alpha=0.7)
             plt.legend()
             plt.show()

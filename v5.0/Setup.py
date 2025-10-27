@@ -43,7 +43,7 @@ base = "Win32GUI" if sys.platform == "win32" else None
 
 setup(
     name="FTIR_GUI",
-    version="3.0",
+    version="5",
     optimize=2,
     description="A GUI that can be used to both simulate FTIR spectra or fit concentrations to experimental FTIR data.",
     options={"build_exe":build_exe_options},
