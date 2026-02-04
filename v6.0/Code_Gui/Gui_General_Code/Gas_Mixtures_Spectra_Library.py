@@ -6,11 +6,11 @@ w_dict = {}
 t_dict = {}
 pathlength = 0
 slit_size = 0
-offset_left = 0
-offset_right = 0
+k_0 = 0
+k_1 = 0
 
 
-def storage_for_dict(w, t, p, s, o_l, o_r):
+def storage_for_dict(w, t, p, s, k0, k1):
     """
     This function creates a storage place, so that the wavenumber and transmission gained for the spectra can be
     imported into this module. This was the only way we were be able to import all the needed parameters correctly,
@@ -19,20 +19,20 @@ def storage_for_dict(w, t, p, s, o_l, o_r):
     :param t: The imported dictionary containing the transmission-arrays
     :param p: The imported pathlength, measured value for the specific gas-cell used
     :param s: The imported slit_size, calculated within calibration for the specific machine used
-    :param o_l: The imported offset of the lowest wavenumber value (1000 cm-1)
-    :param o_r: The imported offset of the highest wavenumber value (4000 cm-1)
+    :param k0: The imported k0, which is the offset from 0
+    :param k1: The imported k1, which is a linear change in the x-axis
     :return: -
     """
-    global w_dict, t_dict, pathlength, slit_size, offset_left, offset_right
+    global w_dict, t_dict, pathlength, slit_size, k_0, k_1
     w_dict = w
     t_dict = t
     pathlength = p
     slit_size = s
-    offset_left = o_l
-    offset_right = o_r
+    k_0 = k0
+    k_1 = k1
 
 
-def spectra_fit_1_molecule(w, c1):
+def spectra_fit_1_molecule(w,k0, c1):
     """
     This fuction is used in order to fit a calculated spectra to the gained experimental data. This formula can only be
     used when one wants to fit a single molecule. Because of the way scipy.curve_fit() works, this function is repeated
@@ -41,13 +41,14 @@ def spectra_fit_1_molecule(w, c1):
 
     :param w: wavenumber range needed to match simulated with experimental data
     :param c1: mole fraction of the molecule one wants to fit
-    :param offset_min: Minimimal offset-error compared with simulated data
-    :param offset_max: Maximal offset-error compared with simulated data
     :param slit_size: Size of the needed slit to match simulated with experimental data
+    :param k0: The imported k0, which is the offset from 0
+    :param k1: The imported k1, which is a linear change in the x-axis
     :return: return fitted transmittance
     """
     global w_dict, t_dict
     c_list=[c1]
+    k_0 = k0
     t_dict_new = {}
     a_dict_new = {}
     a_full = {}
@@ -72,19 +73,9 @@ def spectra_fit_1_molecule(w, c1):
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True, shape="gaussian")
     # Get necessary list with wavenumbers and transmission
     w_temp, t_temp = spec_new.get("transmittance")
+    w_new_temp = k_0 + k_1*w_temp
 
-    # Create offset specific to used machine (easiest way is to calibrate this once and use these as constants in GUI)
-    offset_a = (offset_right - offset_left) / (4000 - 1000)
-    offset_b = offset_right - offset_a * 4000
-
-    list_offset_temp = offset_a * w_temp + offset_b
-
-    # Apply created offset to wavenumber-list
-    w_new_temp = np.zeros(len(w_temp))
-    for i in range(len(w_temp)):
-        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
-
-    # Re-create spectrum object
+    # Re-create spectrum objectw
     spec_new = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
                         units={"transmittance": ""}, conditions={"path_length": pathlength})
 
@@ -99,12 +90,13 @@ def spectra_fit_1_molecule(w, c1):
     return t_new
 
 
-def spectra_fit_2_molecules(w, c1, c2):
+def spectra_fit_2_molecules(w,k0, c1, c2):
     """
-    See explanation of "spectra_linear_wavenumber_dependent_offset_1_molecule".
+    See explanation of "spectra_fit_1_molecule".
     """
     global w_dict, t_dict
     c_list=[c1, c2]
+    k_0 = k0
     t_dict_new = {}
     a_dict_new = {}
     a_full = {}
@@ -123,14 +115,8 @@ def spectra_fit_2_molecules(w, c1, c2):
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True, shape="gaussian")
 
     w_temp, t_temp = spec_new.get("transmittance")
-    offset_a = (offset_right - offset_left) / (4000 - 1000)
-    offset_b = offset_right - offset_a * 4000
+    w_new_temp = k_0 + k_1*w_temp
 
-    list_offset_temp = offset_a * w_temp + offset_b
-
-    w_new_temp = np.zeros(len(w_temp))
-    for i in range(len(w_temp)):
-        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
     spec_new = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
                         units={"transmittance": ""}, conditions={"path_length": pathlength})
 
@@ -143,12 +129,13 @@ def spectra_fit_2_molecules(w, c1, c2):
     return t_new
 
 
-def spectra_fit_3_molecules(w, c1, c2, c3):
+def spectra_fit_3_molecules(w,k0, c1, c2, c3):
     """
-    See explanation of "spectra_linear_wavenumber_dependent_offset_1_molecule".
+    See explanation of "spectra_fit_1_molecule".
     """
     global w_dict, t_dict
     c_list=[c1, c2, c3]
+    k_0 = k0
     t_dict_new = {}
     a_dict_new = {}
     a_full = {}
@@ -167,14 +154,7 @@ def spectra_fit_3_molecules(w, c1, c2, c3):
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True, shape="gaussian")
 
     w_temp, t_temp = spec_new.get("transmittance")
-    offset_a = (offset_right - offset_left) / (4000 - 1000)
-    offset_b = offset_right - offset_a * 4000
-
-    list_offset_temp = offset_a * w_temp + offset_b
-
-    w_new_temp = np.zeros(len(w_temp))
-    for i in range(len(w_temp)):
-        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
+    w_new_temp = k_0 + k_1*w_temp
     spec_new = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
                         units={"transmittance": ""}, conditions={"path_length": pathlength})
 
@@ -187,12 +167,13 @@ def spectra_fit_3_molecules(w, c1, c2, c3):
     return t_new
 
 
-def spectra_fit_4_molecules(w, c1, c2, c3, c4):
+def spectra_fit_4_molecules(w,k0, c1, c2, c3, c4):
     """
-    See explanation of "spectra_linear_wavenumber_dependent_offset_1_molecule".
+    See explanation of "spectra_fit_1_molecule".
     """
     global w_dict, t_dict
     c_list=[c1, c2, c3, c4]
+    k_0 = k0
     t_dict_new = {}
     a_dict_new = {}
     a_full = {}
@@ -211,14 +192,7 @@ def spectra_fit_4_molecules(w, c1, c2, c3, c4):
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True)
 
     w_temp, t_temp = spec_new.get("transmittance")
-    offset_a = (offset_right - offset_left) / (4000 - 1000)
-    offset_b = offset_right - offset_a * 4000
-
-    list_offset_temp = offset_a * w_temp + offset_b
-
-    w_new_temp = np.zeros(len(w_temp))
-    for i in range(len(w_temp)):
-        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
+    w_new_temp = k_0 + k_1*w_temp
     spec_new = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
                         units={"transmittance": ""}, conditions={"path_length": pathlength})
 
@@ -231,12 +205,13 @@ def spectra_fit_4_molecules(w, c1, c2, c3, c4):
     return t_new
 
 
-def spectra_fit_5_molecules(w, c1, c2, c3, c4, c5):
+def spectra_fit_5_molecules(w,k0, c1, c2, c3, c4, c5):
     """
-    See explanation of "spectra_linear_wavenumber_dependent_offset_1_molecule".
+    See explanation of "spectra_fit_1_molecule".
     """
     global w_dict, t_dict
     c_list=[c1, c2, c3, c4, c5]
+    k_0 = k0
     t_dict_new = {}
     a_dict_new = {}
     a_full = {}
@@ -255,14 +230,7 @@ def spectra_fit_5_molecules(w, c1, c2, c3, c4, c5):
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True)
 
     w_temp, t_temp = spec_new.get("transmittance")
-    offset_a = (offset_right - offset_left) / (4000 - 1000)
-    offset_b = offset_right - offset_a * 4000
-
-    list_offset_temp = offset_a * w_temp + offset_b
-
-    w_new_temp = np.zeros(len(w_temp))
-    for i in range(len(w_temp)):
-        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
+    w_new_temp = k_0 + k_1*w_temp
     spec_new = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
                         units={"transmittance": ""}, conditions={"path_length": pathlength})
 
@@ -275,12 +243,13 @@ def spectra_fit_5_molecules(w, c1, c2, c3, c4, c5):
     return t_new
 
 
-def spectra_fit_6_molecules(w, c1, c2, c3, c4, c5, c6):
+def spectra_fit_6_molecules(w,k0, c1, c2, c3, c4, c5, c6):
     """
-    See explanation of "spectra_linear_wavenumber_dependent_offset_1_molecule".
+    See explanation of "spectra_fit_1_molecule".
     """
     global w_dict, t_dict
     c_list=[c1, c2, c3, c4, c5, c6]
+    k_0 = k0
     t_dict_new = {}
     a_dict_new = {}
     a_full = {}
@@ -299,14 +268,7 @@ def spectra_fit_6_molecules(w, c1, c2, c3, c4, c5, c6):
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True)
 
     w_temp, t_temp = spec_new.get("transmittance")
-    offset_a = (offset_right - offset_left) / (4000 - 1000)
-    offset_b = offset_right - offset_a * 4000
-
-    list_offset_temp = offset_a * w_temp + offset_b
-
-    w_new_temp = np.zeros(len(w_temp))
-    for i in range(len(w_temp)):
-        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
+    w_new_temp = k_0 + k_1*w_temp
     spec_new = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
                         units={"transmittance": ""}, conditions={"path_length": pathlength})
 
@@ -319,12 +281,13 @@ def spectra_fit_6_molecules(w, c1, c2, c3, c4, c5, c6):
     return t_new
 
 
-def spectra_fit_7_molecules(w, c1, c2, c3, c4, c5, c6, c7):
+def spectra_fit_7_molecules(w,k0, c1, c2, c3, c4, c5, c6, c7):
     """
-    See explanation of "spectra_linear_wavenumber_dependent_offset_1_molecule".
+    See explanation of "spectra_fit_1_molecule".
     """
     global w_dict, t_dict
     c_list=[c1, c2, c3, c4, c5, c6, c7]
+    k_0 = k0
     t_dict_new = {}
     a_dict_new = {}
     a_full = {}
@@ -343,14 +306,7 @@ def spectra_fit_7_molecules(w, c1, c2, c3, c4, c5, c6, c7):
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True)
 
     w_temp, t_temp = spec_new.get("transmittance")
-    offset_a = (offset_right - offset_left) / (4000 - 1000)
-    offset_b = offset_right - offset_a * 4000
-
-    list_offset_temp = offset_a * w_temp + offset_b
-
-    w_new_temp = np.zeros(len(w_temp))
-    for i in range(len(w_temp)):
-        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
+    w_new_temp = k_0 + k_1*w_temp
     spec_new = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
                         units={"transmittance": ""}, conditions={"path_length": pathlength})
 
@@ -363,12 +319,13 @@ def spectra_fit_7_molecules(w, c1, c2, c3, c4, c5, c6, c7):
     return t_new
 
 
-def spectra_fit_8_molecules(w, c1, c2, c3, c4, c5, c6, c7, c8):
+def spectra_fit_8_molecules(w,k0, c1, c2, c3, c4, c5, c6, c7, c8):
     """
-    See explanation of "spectra_linear_wavenumber_dependent_offset_1_molecule".
+    See explanation of "spectra_fit_1_molecule".
     """
     global w_dict, t_dict
     c_list=[c1, c2, c3, c4, c5, c6, c7, c8]
+    k_0 = k0
     t_dict_new = {}
     a_dict_new = {}
     a_full = {}
@@ -387,14 +344,7 @@ def spectra_fit_8_molecules(w, c1, c2, c3, c4, c5, c6, c7, c8):
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True)
 
     w_temp, t_temp = spec_new.get("transmittance")
-    offset_a = (offset_right - offset_left) / (4000 - 1000)
-    offset_b = offset_right - offset_a * 4000
-
-    list_offset_temp = offset_a * w_temp + offset_b
-
-    w_new_temp = np.zeros(len(w_temp))
-    for i in range(len(w_temp)):
-        w_new_temp[i] = w_temp[i] + list_offset_temp[i]
+    w_new_temp = k_0 + k_1*w_temp
     spec_new = Spectrum({"wavenumber": w_new_temp, "transmittance": t_temp}, wunit='cm-1',
                         units={"transmittance": ""}, conditions={"path_length": pathlength})
 

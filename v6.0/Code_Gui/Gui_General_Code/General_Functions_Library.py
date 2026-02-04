@@ -31,6 +31,9 @@ def read_opus_data_from_folder_into_array_for_gui(dir_inv):
             files_in_directory.append(file)
         elif file[-4:] == ".dat":
             files_in_directory.append(file)
+        elif file[-4:] == ".tsv":
+            files_in_directory.append(file)
+
 
     # Create array and get the experimental data from the files and add this to the array
     dat_array = []
@@ -44,12 +47,23 @@ def read_opus_data_from_folder_into_array_for_gui(dir_inv):
                 csv_reader = csv.reader(csv_file, delimiter=",")
                 line_count = 0
                 for row in csv_reader:
-                    w_data.append(float(row[0]))
-                    t_data.append(float(row[1]))
+                    if row != []:
+                        w_data.append(float(row[0]))
+                        t_data.append(float(row[1]))
             full_data = [np.array(w_data), np.array(t_data)]
             dat_array.append(full_data)
-        # elif file[-4:] == ".dat":
-        #    print("hello")
+        elif file[-4:] == ".tsv":
+            w_data = []
+            t_data = []
+            with open(directory_data + "\\" + file) as csv_file:
+                csv_reader = csv.reader(csv_file, delimiter="\t")
+                line_count = 0
+                for row in csv_reader:
+                    if row[0] != "X":
+                        w_data.append(float(row[0]))
+                        t_data.append(float(row[1]))
+            full_data = [np.array(w_data), np.array(t_data)]
+            dat_array.append(full_data)
     return dat_array
 
 

@@ -5,7 +5,7 @@ other fitting procedures.
 
 from Code_Gui.Gui_General_Code import General_Functions_Library as GFL
 import numpy as np
-from lmfit.models import  ExponentialModel, SkewedGaussianModel, Linea
+from lmfit.models import  ExponentialModel, SkewedGaussianModel
 import os
 import matplotlib.pyplot as plt
 import os.path as op
