@@ -646,8 +646,8 @@ class WorkerFTIRFitter(QObject):
                             hf["Pressure"][index] = pressure
                         if hf['Slitsize'][index] != self.parent.tab_ftir_fitting.slit_size:
                             hf['Slitsize'][index] = self.parent.tab_ftir_fitting.slit_size
-                        if hf['wmin'][index] != self.wlmin:
-                            hf['wmin'][index] = self.wlmin
+                        if hf['wmin'][index] != self.parent.tab_ftir_fitting.wavenumber_min:
+                            hf['wmin'][index] = self.parent.tab_ftir_fitting.wavenumber_min
                         if hf['wmax'][index] != self.wlmax:
                             hf['wmax'][index] = self.wlmax
                         if hf['k0'][index] != self.tab.k0:
@@ -1076,7 +1076,7 @@ class WorkerFTIRFitter(QObject):
                                 hf["Pressure"][index] = pressure
                             if hf['Slitsize'][index] != self.parent.tab_ftir_fitting.slit_size:
                                 hf['Slitsize'][index] = self.parent.tab_ftir_fitting.slit_size
-                            if hf['wmin'][index] != self.wlin:
+                            if hf['wmin'][index] != self.wlmin:
                                 hf['wmin'][index] = self.wlmin
                             if hf['wmax'][index] != self.wlmax:
                                 hf['wmax'][index] = self.wlmax
