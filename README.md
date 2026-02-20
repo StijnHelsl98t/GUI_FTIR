@@ -46,8 +46,8 @@ There are three possible options for someone to use this GUI:
 -  The last option would be to us python to directly create the GUI. For this, one needs to install al the files within the folder and copy-paste the files inside into a single python environment. Once this is done, once can run the "FTIR-GUI.py"-file. After a few second, this will open the GUI. Important to note: everytime one wants to open this GUI now, one will need to do this via python. No stand-alone GUI is now created. Also, again, one needs to make sure the necessary modules are downloaded.
 
 # If using a Mac:
-Install Homebrew if you don't have it already.
-Install c-blosc and HDF5: brew install c-blosc hdf5 
-Install a virtual environment: python3 -m venv .venv (Python 3.14.2 tested on MacOS Sequoia) 
-Activate the virtual environment: source .venv/bin/activate Install the package: pip install -e . 
-Run the GUI: python -m Code_Gui.FTIR_GUI
+-Install Homebrew if you don't have it already.
+-Install c-blosc and HDF5: brew install c-blosc hdf5 
+-Install a virtual environment: python3 -m venv .venv (Python 3.14.2 tested on MacOS Sequoia) 
+-Activate the virtual environment: source .venv/bin/activate Install the package: pip install -e . 
+-Run the GUI: python -m Code_Gui.FTIR_GUI
