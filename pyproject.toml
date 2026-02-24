@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61.0", "cx_Freeze>=6.10"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "FTIR_GUI"
+version = "5"
+description = "A GUI that can be used to both simulate FTIR spectra or fit concentrations to experimental FTIR data."
+authors = [
+    { name = "Stijn Helsloot", email = "stijn.helsloot@maastrichtuniversity.nl" }
+]
+dependencies = [
+    "PySide6",
+    "pyqtgraph",
+    "radis",
+    "numpy",
+    "h5py",
+    "matplotlib",
+    "lmfit",
+    "brukeropusreader",
+    "hjson",
+    "scipy",
+    "tables",
+    "ttictoc",
+    "astropy",
+]
+
+[tool.setuptools]
+packages = ["Code_Gui"]

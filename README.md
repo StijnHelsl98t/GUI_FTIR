@@ -1,6 +1,21 @@
 # FTIR GUI
 Fully open source Gui made for FTIR simulation/data analysis. Both are done via using the open-source python module RADIS.
 
+# Installation
+## Windows
+- Install the requirements: `pip install -r requirements.txt`
+- Install the package: `pip install -e .`
+- Run the GUI: `python -m Code_Gui.FTIR_GUI`
+
+## MacOS
+- Install Homebrew if you don't have it already.
+- Install c-blosc and HDF5: `brew install c-blosc hdf5`
+- Install a virtual environment: `python3 -m venv .venv` (Python 3.14.2 tested on MacOS Sequoia) 
+- Activate the virtual environment: `source .venv/bin/activate`
+- Install the requirements: `pip install -r requirements.txt`
+- Install the package: `pip install -e .`
+- Run the GUI: `python -m Code_Gui.FTIR_GUI`
+
 # Purpose
 This GUI can be used for both for the simulating of theoretical FTIR spectra or for the fitting to experimental FTIR spectra. For both, a tab has been created within the GUI. 
 
@@ -37,12 +52,10 @@ If one wants to fit all their spectra in one sitting, this is also possible. One
 
 After fitting, the graph shown on the bottom is created, which includes the original spectrum, the created fit and the residual.
 
-Once done, one can choose to save this graph in either txt or png format. If one chooses to save this spectrum as a txt-file, the next time one presses the "start single fit"-button, it will not fit but instead again show the already created fit (even after closing and re-opening). If one is not satisfied with this fit, click the "Redo single fit"-button. This will ignore the previously created fit and redo it.
+Once done, one can choose to save this graph in either txt or png format. If one chooses to save this spectrum as a txt-file, the next time one presses the "start single fit"-button, it will not fit but instead again show the already created fit (even after closing and re-opening). If one is not satisfied with this fit, click the "Redo single fit"-button. This will ignore the previously created fit and redo it. The fitted concentrations are saved inside of an HDF5 file. If one wants to open this file, one needs to install a HDF5 viewer. Please see (download HDF)[https://www.hdfgroup.org/downloads/].
 
 # Usage
 There are three possible options for someone to use this GUI:
-- The first option includes e-mailing the creator and asking if you can get the .msi file (installer) and use this to install the gui, to which he will happily comply. This email is the following: stijn.helsloot@maastrichtuniversity.nl
-- The second option would be to actually create this installer themselves, using the "setup,py"-file and python. To do this, one would need to install all the files within the folder and copy-paste the files inside into a single python environment. Once this is done, one can run the "setup,py"-file to get the wanted installer. The creation of this installer might take a couple of hours, so please keep this in mind.
--  The last option would be to us python to directly create the GUI. For this, one needs to install al the files within the folder and copy-paste the files inside into a single python environment. Once this is done, once can run the "FTIR-GUI.py"-file. After a few second, this will open GUI. Important to note: everytime one wants to open this GUI now, one will need to do this via python. No stand-alone GUI is now created.
-
-
+- The first option includes e-mailing the creator and asking if you can get an installer and use this to install the gui, to which he will happily comply. This email is the following: stijn.helsloot@maastrichtuniversity.nl.
+- The second option would be to actually create this installer/gui.exe themselves, using the "setup,py"-file and python. To do this, one would need to install all the files within the folder and copy-paste the files inside into a single python environment. Once this is done, one can run the "setup,py"-file to get the wanted installer. The creation of this installer might take a couple of hours, so please keep this in mind. Also important to keep in mind, this will need one needs to download all the necessary modules.
+-  The last option would be to us python to directly create the GUI. For this, one needs to install al the files within the folder and copy-paste the files inside into a single python environment. Once this is done, once can run the "FTIR-GUI.py"-file. After a few second, this will open the GUI. Important to note: everytime one wants to open this GUI now, one will need to do this via python. No stand-alone GUI is now created. Also, again, one needs to make sure the necessary modules are downloaded.
