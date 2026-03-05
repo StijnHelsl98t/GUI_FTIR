@@ -6,9 +6,12 @@ Fully open source Gui made for FTIR simulation/data analysis. Both are done via 
 Step1: Download Chocolatey
 
 Open Windows PowerShell as Administrator
+
 Run: Get-ExecutionPolicy
 	- if answer == restricted -> Set-ExecutionPolicy UnRestricted
+
 Run: Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
 Test by Typing: choco
 
 
