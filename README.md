@@ -23,11 +23,11 @@ Step 5: Go to created folder
 Run: cd [path_to_folder]
 
 Step 5: Create environment 
-Run: [1] -m venv .venv
+Run: [1] -m venv .venv_310
 	- 1 = path to python 3.10 -> C:\python310\python.exe
 
 Step 6: Activate environment
-Run: .venv/Scripts/activate 
+Run: .venv_310/Scripts/activate 
 
 Step 7:Install necessary requirements
 Run:	pip install radis
