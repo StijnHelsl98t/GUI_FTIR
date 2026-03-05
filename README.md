@@ -17,7 +17,9 @@ Step 2: Download python 3.10
 Run: choco install python310
 
 Step 3: Find where python 3.10 has been installed. Often found at C:/Python310
+
 Step 4: Create folder for python environments. 
+
 Step 5: Go to created folder
 Run: cd [path_to_folder]
 
