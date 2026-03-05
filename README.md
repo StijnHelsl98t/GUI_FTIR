@@ -3,6 +3,8 @@ Fully open source Gui made for FTIR simulation/data analysis. Both are done via 
 
 # Installation
 ## Windows
+Download for windows:
+
 Step1: Download Chocolatey
 - Open Windows PowerShell as Administrator
 - Run: Get-ExecutionPolicy
@@ -11,32 +13,37 @@ Step1: Download Chocolatey
 - Test by Typing: choco
 
 
-
 Step 2: Download python 3.10
-Run: choco install python310
+- Run: choco install python310
 
 Step 3: Find where python 3.10 has been installed. Often found at C:/Python310
 
-Step 4: Create folder for python environments. 
+Step 4: Create folder for python environment
 
-Step 5: Go to created folder
-Run: cd [path_to_folder]
+Step 5: Download Github Files
+- Download as Zip
+- Extract Zip
+- Place files within new folder into the folder for the python environment
 
-Step 5: Create environment 
-Run: [1] -m venv .venv_310
+
+Step 6: Go to created folder within terminal
+- Run: cd [path_to_folder]
+
+Step 7: Create environment 
+- Run: [1] -m venv .venv
 	- 1 = path to python 3.10 -> C:\python310\python.exe
 
-Step 6: Activate environment
-Run: .venv_310/Scripts/activate 
+Step 8: Activate environment
+- Run: .venv/Scripts/activate 
 
-Step 7:Install necessary requirements
-Run:	pip install radis
-	pip install PySide6
-	pip install pyqtgraph
-	pip install brukeropusreader
+Step 8:Install necessary requirements. Run:	
+- pip install radis
+- pip install PySide6
+- pip install pyqtgraph
+- pip install brukeropusreader
 
-Step 8: Start the GUI
-Run: python python -m Code_Gui.FTIR_GUI
+Step 9: Start the GUI
+- Run: python python -m Code_Gui.FTIR_GUI
 
 ## MacOS
 - Install Homebrew if you don't have it already.
