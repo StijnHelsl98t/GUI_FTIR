@@ -53,6 +53,7 @@ Step 9: Start the GUI
 - Install the requirements: `pip install -r requirements.txt`
 - Install the package: `pip install -e .`
 - Run the GUI: `python -m Code_Gui.FTIR_GUI`
+- If no connection with Hitran.org -> Run: pip install pip-system-certs
 
 # Purpose
 This GUI can be used for both for the simulating of theoretical FTIR spectra or for the fitting to experimental FTIR spectra. For both, a tab has been created within the GUI. 
