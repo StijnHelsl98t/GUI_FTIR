@@ -11,7 +11,7 @@ from PySide6.QtCore import QThread
 import sys
 sys.path.append("..")
 import Code_Gui.Gui_Library.Gui_Workers as GW
-import Code_Gui.Gui_Library.Gui_Tab_Library as GTB
+import Code_Gui.Gui_Library.Gui_Tab_Library as GTL
 import pyqtgraph as pg
 
 import matplotlib
@@ -28,40 +28,50 @@ class Window(QWidget):
         # Create worker for simulation
         self.worker_ftir_simulation = GW.WorkerFTIRSimulation(self)
         self.thread_ftir_simulation = QThread()
-        self.worker_ftir_simulation.moveToThread(self.thread_ftir_simulation)
         self.thread_ftir_simulation.start()
+        self.worker_ftir_simulation.moveToThread(self.thread_ftir_simulation)
 
         # Create worker to plot data
         self.worker_plotting = GW.WorkerPlotter(self)
-        self.thread_plotting = QThread()
-        self.worker_plotting.moveToThread(self.thread_plotting)
-        self.thread_plotting.start()
+        
+        # Create worker for hitran
+        self.worker_hitran = GW.WorkerHitran(self)
+        self.thread_hitran = QThread()
+        self.thread_hitran.start()
+        self.worker_hitran.moveToThread(self.thread_hitran)
 
         # Create worker to fit simulated data to experimental data
         self.worker_ftir_fitting = GW.WorkerFTIRFitter(self)
         self.thread_ftir_fitting = QThread()
-        self.worker_ftir_fitting.moveToThread(self.thread_ftir_fitting)
         self.thread_ftir_fitting.start()
+        self.worker_ftir_fitting.moveToThread(self.thread_ftir_fitting)
+        
 
         # Create worker to save data
         self.worker_saving = GW.WorkerSaver(self)
         self.thread_saver = QThread()
-        self.worker_saving.moveToThread(self.thread_saver)
         self.thread_saver.start()
+        self.worker_saving.moveToThread(self.thread_saver)
 
         # Create main GUI
         mainLayout = QVBoxLayout()
         self.tabs = QTabWidget()
 
+        
+        # Create tab for getting / updating database
+        self.tab_get_database = GTL.create_tab_database_updater()
+        self.tab_get_database.create_tab(self)
+
         # Create tab for simulations
-        self.tab_ftir_simulator  = GTB.create_tab_ftir_simulator()
+        self.tab_ftir_simulator  = GTL.create_tab_ftir_simulator()
         self.tab_ftir_simulator.create_tab(self)
 
         # Create tab for fitting procedure
-        self.tab_ftir_fitting = GTB.create_tab_ftir_fitting()
-        self.tab_ftir_fitting.inner_tab = GTB.create_inner_tab_ftir_fitting()
+        self.tab_ftir_fitting = GTL.create_tab_ftir_fitting()
+        self.tab_ftir_fitting.inner_tab = GTL.create_inner_tab_ftir_fitting()
         self.tab_ftir_fitting.create_tab(self)
 
+        self.tabs.addTab(self.tab_get_database, "Get/Update Hitran Database")
         self.tabs.addTab(self.tab_ftir_simulator, "Simulate FTIR Data")
         self.tabs.addTab(self.tab_ftir_fitting, "Fit FTIR Data")
 
