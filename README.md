@@ -13,10 +13,10 @@ Step1: Download Chocolatey
 - Test by Typing: choco
 
 
-Step 2: Download python 3.10
-- Run: choco install python310
+Step 2: Download python 3.9
+- Run: choco install python39
 
-Step 3: Find where python 3.10 has been installed. Often found at C:/Python310
+Step 3: Find where python 3.9 has been installed. Often found at C:/Python39
 
 Step 4: Create folder for python environment
 
@@ -31,7 +31,7 @@ Step 6: Go to created folder within terminal
 
 Step 7: Create environment 
 - Run: [1] -m venv .venv
-	- 1 = path to python 3.10 -> C:\python310\python.exe
+	- 1 = path to python 3.9 -> C:\python39\python.exe
 
 Step 8: Activate environment
 - Run: .venv/Scripts/activate 
