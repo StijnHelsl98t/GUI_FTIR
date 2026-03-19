@@ -37,10 +37,7 @@ Step 8: Activate environment
 - Run: .venv/Scripts/activate 
 
 Step 8:Install necessary requirements. Run:	
-- pip install radis
-- pip install PySide6
-- pip install pyqtgraph
-- pip install brukeropusreader
+- pip install -r requirement.txt
 
 Step 9: Start the GUI
 - Run: python python -m Code_Gui.FTIR_GUI
