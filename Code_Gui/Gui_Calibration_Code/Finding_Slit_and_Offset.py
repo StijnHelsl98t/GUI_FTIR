@@ -166,7 +166,7 @@ def spectra_molecules2(pars: Parameters, w_meas, t_meas, s, test=False):
         dict_c[molecule] = pars['c_' + molecule].value 
         dict_spec_new[molecule] = s[molecule].rescale_mole_fraction(dict_c[molecule])
         try:
-            spec_new += dict_spec_new[molecule]
+            spec_new = spec_new // dict_spec_new[molecule]
         except:
             spec_new = dict_spec_new[molecule]
     # Apply experimental slit (broadening coefficient term) to spectra object

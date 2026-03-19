@@ -32,6 +32,8 @@ libs_to_include = [
     "lmfit",
     "brukeropusreader",
     "hjson",
+    "Pyside6",
+    "pyarrow"
 ]
 
 for lib in libs_to_include:
@@ -59,7 +61,7 @@ bdist_mac_options = {
 
 setup(
     name="FTIR_GUI",
-    version="1",
+    version="7",
     optimize=2,
     description="A GUI that can be used to both simulate FTIR spectra or fit concentrations to experimental FTIR data.",
     packages=find_packages(),
