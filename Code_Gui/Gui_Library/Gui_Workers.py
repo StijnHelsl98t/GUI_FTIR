@@ -471,6 +471,7 @@ class WorkerFTIRFitter(QObject):
                 if self.inner_tab.background != current_file:
                     print(self.inner_tab.w_dict.keys())
                     w_exp, t_exp = self.inner_tab.w_dict[current_file], self.inner_tab.t_dict[current_file]
+                    print(t_exp)
 
                     if self.wlmax_j > self.wlmin_j:
 
@@ -497,10 +498,8 @@ class WorkerFTIRFitter(QObject):
                     dict_spec={}
 
                     fitParameters = Parameters()
-                    if self.tab.k0 > 0:
-                        fitParameters.add('k0', value=self.tab.k0, min=0.5*self.tab.k0, max=2*self.tab.k0, vary=False)
-                    elif self.tab.k0 < 0:
-                        fitParameters.add('k0', value=self.tab.k0, min=2*self.tab.k0, max=0.5*self.tab.k0, vary=False)
+                    fitParameters.add('k0', value=self.tab.k0, min=-5, max=5, vary=True)
+                    #fitParameters.add('k1', value=self.tab.k1, vary=False)
                     
                     for molecule in dict_molecules.keys():
 
@@ -515,9 +514,9 @@ class WorkerFTIRFitter(QObject):
                     print(fitParameters)
                     
                     
-                    out = minimize(GMSL.spectra_molecules_s, fitParameters, args=(w_exp, t_exp_baseline_corrected, dict_spec), method='leastq')
+                    out = minimize(GMSL.spectra_molecules_s, fitParameters, args=(w_exp, t_exp, dict_spec), method='leastq')
                     print(fit_report(out))
-                    fit = GMSL.spectra_molecules_s(out.params, w_exp, t_exp_baseline_corrected, dict_spec, test=True)
+                    fit = GMSL.spectra_molecules_s(out.params, w_exp, t_exp, dict_spec, test=True)
 
                     dict_c_old = {}
                     dict_c_errors_old = {}
@@ -541,12 +540,10 @@ class WorkerFTIRFitter(QObject):
                         if refit_bool:
                             dict_spec_refit = {}
                             fitParameters_new = Parameters()
-                            if self.tab.k0 > 0:
-                                fitParameters_new.add('k0', value=self.tab.k0, min=0.5*self.tab.k0, max=2*self.tab.k0, vary=False)
-                            elif self.tab.k0 < 0:
-                                fitParameters_new.add('k0', value=self.tab.k0, min=2*self.tab.k0, max=0.5*self.tab.k0, vary=False)
+                            fitParameters_new.add('k0', value=out.params['k0'].value, min=-5, max=5, vary=True)
+                            #fitParameters_new.add('k1', value=self.tab.k1, vary=False)
 
-                            for molecule in dict_molecules.keys():
+                            for molecule in dict_c_old.keys():
                                 dict_spec_refit[molecule] = (
                                     GFL.spectrum_in_air_creator(mol=molecule,
                                                                 mf=dict_c_old[molecule],
@@ -559,13 +556,13 @@ class WorkerFTIRFitter(QObject):
 
                             GMSL.storage_for_dict(temperature, pressure, pathlength, self.tab.slit_size, self.tab.k1)
 
-                            out_refit = minimize(GMSL.spectra_molecules_s, fitParameters_new, args=(w_exp, t_exp_baseline_corrected, dict_spec_refit), method='leastq')
+                            out_refit = minimize(GMSL.spectra_molecules_s, fitParameters_new, args=(w_exp, t_exp, dict_spec_refit), method='leastq')
                             print(fit_report(out_refit))
-                            refit = GMSL.spectra_molecules_s(out_refit.params, w_exp, t_exp_baseline_corrected, dict_spec_refit, test=True)
+                            refit = GMSL.spectra_molecules_s(out_refit.params, w_exp, t_exp, dict_spec_refit, test=True)
 
                             dict_c_new = {}
                             dict_c_errors_new={}
-                            for molecule in dict_molecules.keys():
+                            for molecule in dict_c_old.keys():
                                 if out_refit.params['c_' + molecule].value < 0:
                                     dict_c_new[molecule] = 0
                                     dict_c_errors_new[molecule] = 0
@@ -589,7 +586,7 @@ class WorkerFTIRFitter(QObject):
                                 dict_c_errors_old[molecule] = dict_c_errors_new[molecule]
                             if correctness_count == 0:
                                 refit_bool = False
-                    residual = (refit - t_exp_baseline_corrected) / t_exp_baseline_corrected
+                    residual = (refit - t_exp) / t_exp
                     for molecule in dict_molecules.keys():
                         dict_molecules[molecule] = dict_c_new[molecule]
                         dict_molecules_errors[molecule] = dict_c_errors_old[molecule]

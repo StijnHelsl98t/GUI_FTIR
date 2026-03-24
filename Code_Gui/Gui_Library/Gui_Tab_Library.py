@@ -928,7 +928,6 @@ class create_inner_tab_ftir_fitting(QTabWidget):
                     data_wavelength = np.array(self.array_data[i].get_range("AB")[0:-1])
                     if np.round(np.mean(self.array_data[i]["AB"][0:-1])) == 0:
                         self.array_data[i]["AB"][0:-1] = GFL.ab_to_tr(self.array_data[i]["AB"][0:-1])
-
                     data_transmission = np.array(self.array_data[i]["AB"][0:-1])
                 except:
                     data_wavelength = self.array_data[i][0][0:-1]

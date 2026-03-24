@@ -1,4 +1,4 @@
-from radis import Spectrum
+from radis import Spectrum, MergeSlabs
 import numpy as np
 import Code_Gui.Gui_General_Code.General_Functions_Library as GFL
 from lmfit import minimize, Parameters, fit_report
@@ -111,17 +111,18 @@ def spectra_molecules_s(pars: Parameters, w_meas, t_meas, s, test=False):
     :return: return fitted transmittance
     """
     k0 = pars['k0']
+    #k1= pars['k1']
     dict_spec_new = {}
+    dict_spec_new_abs = {}
     dict_c = {}
-    print(s.keys())
+    spectra = []
     for molecule in s.keys():
-        dict_c[molecule] = pars['c_' + molecule].value 
-        dict_spec_new[molecule] = s[molecule].rescale_mole_fraction(dict_c[molecule])
-        try:
-            spec_new = spec_new // dict_spec_new[molecule]
-        except:
-            spec_new = dict_spec_new[molecule]
+        dict_c[molecule] = pars['c_' + molecule].value
+        spectra.append(s[molecule].rescale_mole_fraction(dict_c[molecule]))
+    print(dict_c)
     
+    spec_new = MergeSlabs(*spectra, out="transparent")
+
     # Apply experimental slit (broadening coefficient term) to spectra object
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True, shape="gaussian")
     # Get necessary list with wavenumbers and transmission

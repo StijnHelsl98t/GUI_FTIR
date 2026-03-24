@@ -32,8 +32,8 @@ libs_to_include = [
     "lmfit",
     "brukeropusreader",
     "hjson",
-    "Pyside6",
-    "pyarrow"
+    #"Pyside6",
+    #"pyarrow"
 ]
 
 for lib in libs_to_include:

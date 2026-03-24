@@ -162,13 +162,14 @@ def spectra_molecules2(pars: Parameters, w_meas, t_meas, s, test=False):
     slit_size = pars['slit'].value
     dict_spec_new = {}
     dict_c = {}
+    spectra = []
     for molecule in s.keys():
         dict_c[molecule] = pars['c_' + molecule].value 
-        dict_spec_new[molecule] = s[molecule].rescale_mole_fraction(dict_c[molecule])
-        try:
-            spec_new = spec_new // dict_spec_new[molecule]
-        except:
-            spec_new = dict_spec_new[molecule]
+        spectra.append(s[molecule].rescale_mole_fraction(dict_c[molecule]))
+
+    print(dict_c)
+
+    spec_new = MergeSlabs(*spectra, out="transparent")
     # Apply experimental slit (broadening coefficient term) to spectra object
     spec_new.apply_slit(slit_size, unit="cm-1", norm_by="area", inplace=True, shape="gaussian")
     # Get necessary list with wavenumbers and transmission
@@ -211,6 +212,7 @@ for i in range(0, len(files_in_directory_temp)):
         t_list = [0,298.15,298.45,298.15,297.55,297.55,297.55, 297.55]
         p_list = [0,0.052,0.0502,0.0506, 0.0506, 0.0506, 0.0506]
         c_list = [0,1,1,0.5,0.01,0.002,0.0005]
+        c_list2 = [0,0,0,0,0,0,0,0]
         pathlength_0 = 20.062
 
         w_exp = []
@@ -221,7 +223,7 @@ for i in range(0, len(files_in_directory_temp)):
         dict_t2 = {}
         dict_w3 = {}
         dict_t3 = {}
-        list_molecules = ["CH4"]
+        list_molecules = ["CH4", "CO"]
         try:
             data_wavelength = np.array(data.get_range("AB")[0:-1])
             data_transmission = np.array(data["AB"][0:-1])
@@ -290,7 +292,9 @@ for i in range(0, len(files_in_directory_temp)):
             dict_molecules = {}
             for mol_i in range(len(list_molecules)):
                 dict_molecules[list_molecules[mol_i]] = c_list[i]
-                    
+                if mol_i == "CO":
+                    dict_molecules[list_molecules[mol_i]] = 0
+            print(dict_molecules)
             dict_spec = {}
             dict_w = {}
             dict_t = {}
@@ -299,17 +303,18 @@ for i in range(0, len(files_in_directory_temp)):
             fitParameters.add('k1', value=1, min=0.99, max=1.01, vary=True)
             fitParameters.add('slit', value=0.25, min=0.1, max=0.5, vary=True)
 
+            
             for molecule in dict_molecules.keys(): 
                 dict_spec[molecule] = GFL.spectrum_in_air_creator(mol=molecule, mf=dict_molecules[molecule],
                                                                                     pres=p_list[i], temp=t_list[i],
                                                                                     path_l=pathlength_0,
                                                                                     wl_min=wlmin2, wl_max=wlmax2, step=0.001)
                 fitParameters.add('c_' + molecule, value=c_list[i], min=1*10**-6, max=1, vary=False)
+            
 
             out = minimize(spectra_molecules2, fitParameters, args=(w_exp, t_exp_baseline_corrected, dict_spec), method='leastq')
             print(fit_report(out))
             fit = spectra_molecules2(out.params, w_exp, t_exp_baseline_corrected, dict_spec, test=True)
-            
 
             c_list_old = {}
             c_list_minus = {}
