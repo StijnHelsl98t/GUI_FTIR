@@ -30,11 +30,11 @@ Step 6: Go to created folder within terminal
 - Run: `cd [path_to_folder]`
 
 Step 7: Create environment 
-- Run: `[1] -m venv .venv`
+- Run: `[1] -m venv .venv39`
 	- 1 = path to python 3.9 -> C:\python39\python.exe
 
 Step 8: Activate environment
-- Run: `.venv/Scripts/activate` 
+- Run: `.venv39/Scripts/activate` 
 
 Step 8:Install necessary requirements.
 - Run: `pip install -r requirement.txt`
@@ -47,7 +47,9 @@ Step 9: Start the GUI
 - Install python 3.9.13: `brew install python@3.9.13`
 - Install c-blosc and HDF5: `brew install c-blosc hdf5`
 - Go to correct folder for python environment. Run: `cd [path_to_folder]`
-- Install a virtual environment: `python3 -m venv .venv` (Python 3.14.
+- Find where python 3.9 has been installed.
+- Install a virtual environment: `[1] -m venv .venv39`
+	- 1 =  path to python 3.9
 - Activate the virtual environment: `source .venv/bin/activate`
 - Install the requirements: `pip install -r requirements.txt`
 - Run the GUI: `python -m Code_Gui.FTIR_GUI`
