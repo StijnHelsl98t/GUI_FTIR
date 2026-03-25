@@ -44,6 +44,7 @@ Step 9: Start the GUI
 
 ## MacOS
 - Install Homebrew if you don't have it already.
+- Install python 3.9.13: 'brew install python@3.9.13'
 - Install c-blosc and HDF5: `brew install c-blosc hdf5`
 - Install a virtual environment: `python3 -m venv .venv` (Python 3.14.2 tested on MacOS Sequoia) 
 - Activate the virtual environment: `source .venv/bin/activate`
