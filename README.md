@@ -51,7 +51,7 @@ Step 9: Start the GUI
 - Install a virtual environment: `[1] -m venv .venv39`
 	- 1 =  path to python 3.9
 - Activate the virtual environment: `source .venv/bin/activate`
-- Install the requirements: `pip install -r requirements.txt`
+- Install the requirements: `pip install -r requirement.txt`
 - Run the GUI: `python -m Code_Gui.FTIR_GUI`
 - If no connection with Hitran.org -> Run: pip install pip-system-certs
 
