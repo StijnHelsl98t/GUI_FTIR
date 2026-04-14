@@ -245,7 +245,7 @@ class WorkerFTIRFitter(QObject):
         self.dict_molecules = {}
         self.dict_molecules_errors = {}
 
-
+    @Slot()
     def ftir_fit_one(self, s):
         self.tab = self.parent.tab_ftir_fitting
         self.inner_tab = self.parent.tab_ftir_fitting.inner_tab
@@ -311,6 +311,8 @@ class WorkerFTIRFitter(QObject):
             if len(list_pathlength) == 1:
                 pathlength = list_pathlength[0]
                 list_pathlength = np.zeros(len_files_in_dir)
+                for p_i in range(len(list_pathlength)):
+                    list_pathlength[p_i] = pathlength
                 bool_pathlength = True
             elif len(list_pathlength) == len_files_in_dir and len(list_pathlength) != 0:
                 pathlength = list_pathlength[index]
@@ -498,7 +500,7 @@ class WorkerFTIRFitter(QObject):
                     dict_spec={}
 
                     fitParameters = Parameters()
-                    fitParameters.add('k0', value=self.tab.k0, min=-5, max=5, vary=True)
+                    fitParameters.add('k0', value=self.tab.k0, min=-2, max=2, vary=True)
                     #fitParameters.add('k1', value=self.tab.k1, vary=False)
                     
                     for molecule in dict_molecules.keys():
@@ -507,16 +509,16 @@ class WorkerFTIRFitter(QObject):
                                                                                         pres=pressure, temp=temperature,
                                                                                         path_l=pathlength,
                                                                                         wl_min=self.wlmin, wl_max=self.wlmax, step=0.001)
-                        fitParameters.add('c_' + molecule, value=dict_molecules[molecule], min=0.001, max=1, vary=True)
+                        fitParameters.add('c_' + molecule, value=dict_molecules[molecule], min=0.0, max=1, vary=True)
 
                     GMSL.storage_for_dict(temperature, pressure, pathlength, self.tab.slit_size, self.tab.k1)
 
                     print(fitParameters)
                     
                     
-                    out = minimize(GMSL.spectra_molecules_s, fitParameters, args=(w_exp, t_exp, dict_spec), method='leastq')
+                    out = minimize(GMSL.spectra_molecules_s, fitParameters, args=(w_exp, t_exp_baseline_corrected, dict_spec), method='leastq')
                     print(fit_report(out))
-                    fit = GMSL.spectra_molecules_s(out.params, w_exp, t_exp, dict_spec, test=True)
+                    fit = GMSL.spectra_molecules_s(out.params, w_exp, t_exp_baseline_corrected, dict_spec, test=True)
 
                     dict_c_old = {}
                     dict_c_errors_old = {}
@@ -540,7 +542,7 @@ class WorkerFTIRFitter(QObject):
                         if refit_bool:
                             dict_spec_refit = {}
                             fitParameters_new = Parameters()
-                            fitParameters_new.add('k0', value=out.params['k0'].value, min=-5, max=5, vary=True)
+                            fitParameters_new.add('k0', value=out.params['k0'].value, min=-2, max=2, vary=True)
                             #fitParameters_new.add('k1', value=self.tab.k1, vary=False)
 
                             for molecule in dict_c_old.keys():
@@ -552,13 +554,13 @@ class WorkerFTIRFitter(QObject):
                                                                 wl_min=self.wlmin,
                                                                 wl_max=self.wlmax,
                                                                 step=0.001))
-                                fitParameters_new.add('c_' + molecule, value=dict_c_old[molecule], min=0.8*dict_c_old[molecule], max=1.2*dict_c_old[molecule], vary=True)
+                                fitParameters_new.add('c_' + molecule, value=dict_c_old[molecule], min=0.5*dict_c_old[molecule], max=2*dict_c_old[molecule], vary=True)
 
                             GMSL.storage_for_dict(temperature, pressure, pathlength, self.tab.slit_size, self.tab.k1)
 
-                            out_refit = minimize(GMSL.spectra_molecules_s, fitParameters_new, args=(w_exp, t_exp, dict_spec_refit), method='leastq')
+                            out_refit = minimize(GMSL.spectra_molecules_s, fitParameters_new, args=(w_exp, t_exp_baseline_corrected, dict_spec_refit), method='leastq')
                             print(fit_report(out_refit))
-                            refit = GMSL.spectra_molecules_s(out_refit.params, w_exp, t_exp, dict_spec_refit, test=True)
+                            refit = GMSL.spectra_molecules_s(out_refit.params, w_exp, t_exp_baseline_corrected, dict_spec_refit, test=True)
 
                             dict_c_new = {}
                             dict_c_errors_new={}
@@ -586,7 +588,7 @@ class WorkerFTIRFitter(QObject):
                                 dict_c_errors_old[molecule] = dict_c_errors_new[molecule]
                             if correctness_count == 0:
                                 refit_bool = False
-                    residual = (refit - t_exp) / t_exp
+                    residual = (refit - t_exp_baseline_corrected) / t_exp_baseline_corrected
                     for molecule in dict_molecules.keys():
                         dict_molecules[molecule] = dict_c_new[molecule]
                         dict_molecules_errors[molecule] = dict_c_errors_old[molecule]
@@ -635,7 +637,7 @@ class WorkerFTIRFitter(QObject):
                                                        "incorrect/no molecules, pressure, "
                                                        "temperature or pathlength")
                 self.tab.layout.label_info_fit.setStyleSheet("background-color:red; font-size:11pt; font:bold")
-    
+    @Slot() 
     def ftir_fit_all(self, s):
         self.tab = self.parent.tab_ftir_fitting
         self.inner_tab = self.tab.inner_tab
@@ -1184,6 +1186,7 @@ class WorkerSaver(QObject):
         mpl.rcParams['legend.labelcolor'] = "white"
         mpl.rcParams['figure.figsize'] = (22, 11.5)
 
+    @Slot()
     def save_data_in_txt(self, data):
         self.directory = data[0]
         self.name = data[1]
@@ -1202,6 +1205,7 @@ class WorkerSaver(QObject):
             np.savetxt(self.directory + self.name + ".txt", self.data, delimiter='\t',
                        header="Wavelength \t\t\tSimulated data")
 
+    @Slot()
     def save_data_as_png(self, data):
         self.directory = data[0]
         self.name = data[1]
