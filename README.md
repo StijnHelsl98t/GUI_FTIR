@@ -13,10 +13,10 @@ Step1: Download Chocolatey
 - Test by Typing: `choco`
 
 
-Step 2: Download python 3.9
-- Run: `choco install python39`
+Step 2: Download python 3.10
+- Run: `choco install python310`
 
-Step 3: Find where python 3.9 has been installed. Often found at C:/Python39
+Step 3: Find where python 3.10 has been installed. Often found at C:/Python39
 
 Step 4: Create folder for python environment
 
@@ -30,11 +30,11 @@ Step 6: Go to created folder within terminal
 - Run: `cd [path_to_folder]`
 
 Step 7: Create environment 
-- Run: `[1] -m venv .venv39`
+- Run: `[1] -m venv .venv310`
 	- 1 = path to python 3.9 -> C:\python39\python.exe
 
 Step 8: Activate environment
-- Run: `.venv39/Scripts/activate` 
+- Run: `.venv310/Scripts/activate` 
 
 Step 8:Install necessary requirements.
 - Run: `pip install -r requirement.txt`
@@ -48,7 +48,7 @@ Step 9: Start the GUI
 - Install c-blosc and HDF5: `brew install c-blosc hdf5`
 - Go to correct folder for python environment. Run: `cd [path_to_folder]`
 - Find where python 3.9 has been installed.
-- Install a virtual environment: `[1] -m venv .venv39`
+- Install a virtual environment: `[1] -m venv .venv310`
 	- 1 =  path to python 3.9
 - Activate the virtual environment: `source .venv/bin/activate`
 - Install the requirements: `pip install -r requirement.txt`
